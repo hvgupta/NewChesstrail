@@ -33,6 +33,16 @@ def main():
                 running = False
             
             elif e.type == p.MOUSEBUTTONDOWN:
+                for piece in WhiteList:
+                    if piece.get_name() == "K" and piece.get_colour() == Colour.w.value:
+                        whiteKing = piece
+                        break
+                for piece in BlackList:
+                    if piece.get_name() == "K" and piece.get_colour() == Colour.b.value:
+                        blackKing = piece
+                        break
+                # isCheck = check(whiteKing,WhiteList,BlackList)       
+                # isCheckMate = check_mate(whiteKing,WhiteList,BlackList) 
                 p.display.update()
                 location = p.mouse.get_pos()
                 col = location[0]//SQ_SIZE
@@ -44,17 +54,15 @@ def main():
                     sqSelected = (row,col)
                     player_click.append(sqSelected)
                 
-                selected_p = None
-
-                if current_turn == Colour.w.value:
-                    for piece in WhiteList:
-                        if len(player_click) and (piece.get_position() == player_click[0]).all():
-                            selected_p = piece   
-                else:
-                    for piece in BlackList:
-                        if len(player_click) and (piece.get_position() == player_click[0]).all():
-                            selected_p = piece             
-                
+                selected_p = None         
+                if len(player_click) == 0:
+                    break
+                selected_p = piece_at_that_point(player_click[0],WhiteList,BlackList)
+                if selected_p == 0:
+                    break
+                if selected_p.get_colour() != current_turn:
+                    selected_p = None
+                                
                 if selected_p  == None:
                     sqSelected = ()
                     player_click = []
@@ -66,21 +74,13 @@ def main():
                     all_possible = valueDefiner(selected_p)
                 
                 if len(player_click) == 2:
-                    condition = True
+    
+                    attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
                     
-                    for w_piece, b_piece in zip(WhiteList,BlackList):
-                        if (w_piece.get_position() == player_click[1]).all() and selected_p.get_colour() == -1:
-                            condition = False
-                        if (b_piece.get_position() == player_click[1]).all() and selected_p.get_colour() == 1:
-                            condition = False
-                    
-                    if selected_p == None:
-                        break
-                    
-                    if selected_p.get_name() == "R":
-                        king = piece_at_that_point(player_click[1],WhiteList,BlackList)
-                        if king != 0 and king.get_name() == "K" and king.get_info()[2] and selected_p.get_info()[2]:
-                            condition = True
+                    if attacked_p != 0  and attacked_p.get_colour() == selected_p.get_colour():
+                        condition = False
+                    else:
+                        condition = True
                             
                     if condition and selected_p != None:
                         p_info = selected_p.get_info()
@@ -90,27 +90,25 @@ def main():
                         all_possible = all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)]
                         
                         if ((all_possible == player_click[1]).all(axis=1)).any() and output:
-                            attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
-                            if (p_name == "R" and attacked_p.get_name() == "K") or (p_name == "K" and attacked_p.get_name() == "R"):
-                                selected_p,attacked_p,c_board.board = castle_checker(selected_p,attacked_p,c_board.board,WhiteList,BlackList)
-                                selected_p.piece_type = (p_info[0],p_info[1],False)
-                                a_info = attacked_p.get_info()
-                                attacked_p.piece_type = (a_info[0],a_info[1],False)
-                                attacked_p = 0
+                            if attacked_p == 0 and p_name != "p":
+                                move_piece(selected_p,np.array(player_click[1]),c_board.board)
                             elif p_name == "p":
                                 if attacked_p != 0:
                                     sqSelected = ()
                                     player_click = []
                                     break
                                 else:
-                                    move_piece(selected_p,np.array(player_click[1]),c_board.board)
-                            else:                            
-                                move_piece(selected_p,np.array(player_click[1]),c_board.board)
+                                    move_piece(selected_p,np.array(player_click[1]),c_board.board)                   
                                 
                             current_turn = current_turn*-1
                             if attacked_p != 0:
                                 attacked_p.change_pos(np.array([-1,-1]))
-                                
+                        elif p_name == "K" and attacked_p == 0:
+                            selected_p,c_board.board,attacked_p = castle_checker(selected_p,player_click[1],c_board.board,WhiteList,BlackList)
+                            selected_p.piece_type = (p_info[0],p_info[1],False)
+                            a_info = attacked_p.get_info()
+                            attacked_p.piece_type = (a_info[0],a_info[1],False)
+                            current_turn = current_turn*-1
                             
                         elif p_info == getattr(type,"p").value and player_click[1] in all_attack:
                             attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
@@ -123,44 +121,12 @@ def main():
                     player_click = []
                         
         gameState(screen,c_board.board)
-        try:
-            for turn_set in all_possible:                  
-                for pos in turn_set:
-                    if (pos[0] > 7 or pos[0] <0) or (pos[1] > 7 or pos[1] < 0):
-                        break
-                    # print(len(player_click))
-                    # print(player_click[0] == player_click[1])
-                    if len(player_click) == 0 or selected_p == None:
-                        break
-                    surface1 = p.Surface((512,512),p.SRCALPHA)
-                    surface1.set_colorkey(p.Color("white"))  # use `(0,0,0)` (black color) as transparent color
-                    surface1.set_alpha(128)  # transparency 50% for other colors
-                    output = piece_at_that_point(pos,WhiteList,BlackList)
-                    if output == 0:
-                        p.draw.circle(surface1, (0,0,0), (32 + (64*pos[1]),32 + (64*pos[0])), DIMENSION*1.5) 
-                    elif output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
-                        # p.draw.circle(surface1, (255,0,0), (32 + (SQ_SIZE*pos[1]),32 + (SQ_SIZE*pos[0])), DIMENSION*1.5)
-                        p.draw.rect(surface1,(255,0,0),p.Rect(pos[1]*SQ_SIZE,pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-                        screen.blit(surface1,(0,0))
-                        break
-                    elif output.get_colour() == selected_p.get_colour():
-                        break
-                    screen.blit(surface1,(0,0))
-            
-            if selected_p.get_name() == "p":
-                for attack in all_attack:
-                    surface1 = p.Surface((512,512),p.SRCALPHA)
-                    surface1.set_colorkey(p.Color("white"))
-                    surface1.set_alpha(128)
-                    output = piece_at_that_point(attack,WhiteList,BlackList)
-                    if output == 0:
-                        pass
-                    elif output.get_colour() != selected_p.get_colour():
-                        p.draw.rect(surface1,(255,0,0),p.Rect(attack[1]*SQ_SIZE,attack[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-                        screen.blit(surface1,(0,0))        
-                
-        except:
-            pass
+        
+        if len(player_click) != 0 and selected_p != None and selected_p.get_name() != "p":
+            position_shower(all_possible,WhiteList,BlackList,screen,selected_p)
+        elif len(player_click) != 0 and selected_p != None and selected_p.get_name() == "p":
+            position_shower(all_possible,WhiteList,BlackList,screen,selected_p,all_attack)
+
         clock.tick(15)
         p.display.flip()
         # selected_p = None
@@ -183,7 +149,58 @@ def drawPieces(screen,board):
             piece = board[r][c]
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+
+def position_shower(all_possible, WhiteList, BlackList, screen, selected_p, all_attack = None):
+    for turn_set in all_possible: 
+                         
+        for pos in turn_set:
+            
+            if (pos[0] > 7 or pos[0] <0) or (pos[1] > 7 or pos[1] < 0):
+                break
+            surface = surface_creator()
+            output = piece_at_that_point(pos,WhiteList,BlackList)
+            if output == 0:
+                draw(screen,surface,"c",pos)
+            elif output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
+                draw(screen,surface,"r",pos)
+                break
+            elif output.get_colour() == selected_p.get_colour():
+                break
+
+    if selected_p.get_name() == "p":
+        for attack in all_attack:
+            surface = surface_creator()
+            output = piece_at_that_point(attack,WhiteList,BlackList)
+            if output == 0:
+                pass
+            elif output.get_colour() != selected_p.get_colour():
+                draw(screen,surface,"r",attack)
+    
+    if selected_p.get_name() == "K" and selected_p.get_info()[2]:
+        p_pos = selected_p.get_position()
+        for pos in np.array([[0,-2],[0,2]]):
+            new_pos = pos+p_pos
+            if pos[1] == -2:
+                output = check_line(np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
+            else:
+                output = check_line(np.array([[[0,1],[0,2]]])+p_pos,new_pos,WhiteList,BlackList)
+            if piece_at_that_point(new_pos,WhiteList,BlackList) == 0 and output:
+                surface = surface_creator()
+                draw(screen,surface,"c",new_pos)
                 
-                
+    
+def surface_creator():
+    surface = p.Surface((512,512),p.SRCALPHA)
+    surface.set_colorkey(p.Color("White"))
+    surface.set_alpha(128)
+    return surface
+
+def draw(screen,surface, r_or_c:str, pos):
+    if r_or_c.lower() == "c":       
+        p.draw.circle(surface,(0,0,0), (32 + (64*pos[1]),32 + (64*pos[0])), DIMENSION*1.5)
+    else:
+        p.draw.rect(surface,(255,0,0),p.Rect(pos[1]*SQ_SIZE,pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+    screen.blit(surface,(0,0))
+
 if __name__ == "__main__":    
     main()

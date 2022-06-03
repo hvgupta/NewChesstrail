@@ -24,3 +24,6 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     
     def get_name(self):
         return self.name
+    
+    def change_type(self,new_type):
+        self.piece_type = new_type
