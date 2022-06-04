@@ -32,16 +32,7 @@ def main():
             if e.type == p.QUIT:
                 running = False
             
-            elif e.type == p.MOUSEBUTTONDOWN:
-                for piece in WhiteList:
-                    if piece.get_name() == "K" and piece.get_colour() == Colour.w.value:
-                        whiteKing = piece
-                        break
-                for piece in BlackList:
-                    if piece.get_name() == "K" and piece.get_colour() == Colour.b.value:
-                        blackKing = piece
-                        break
-                isCheck = check(whiteKing,WhiteList,BlackList)       
+            elif e.type == p.MOUSEBUTTONDOWN:    
                 # isCheckMate = check_mate(whiteKing,WhiteList,BlackList) 
                 p.display.update()
                 location = p.mouse.get_pos()
@@ -123,14 +114,23 @@ def main():
                         
         gameState(screen,c_board.board)
         
-        if len(player_click) != 0 and selected_p != None and selected_p.get_name() != "p":
-            position_shower(all_possible,WhiteList,BlackList,screen,selected_p)
-        elif len(player_click) != 0 and selected_p != None and selected_p.get_name() == "p":
-            position_shower(all_possible,WhiteList,BlackList,screen,selected_p,all_attack)
+        for piece in WhiteList:
+            if piece.get_name() == "K" and piece.get_colour() == Colour.w.value:
+                whiteKing = piece
+                break
+        for piece in BlackList:
+            if piece.get_name() == "K" and piece.get_colour() == Colour.b.value:
+                blackKing = piece
+                break 
+        isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
+        
+        if len(player_click) != 0 and selected_p != 0 and selected_p.get_name() != "p":
+            position_shower(all_possible,WhiteList,BlackList,screen,selected_p,isCheck)
+        elif len(player_click) != 0 and selected_p != 0 and selected_p.get_name() == "p":
+            position_shower(all_possible,WhiteList,BlackList,screen,selected_p,isCheck,all_attack)
 
         clock.tick(15)
         p.display.flip()
-        # selected_p = None
     
 
 def gameState(screen, board):
@@ -151,7 +151,7 @@ def drawPieces(screen,board):
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def position_shower(all_possible, WhiteList, BlackList, screen, selected_p, all_attack = None):
+def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,isCheck,all_attack = None):
     for turn_set in all_possible: 
                          
         for pos in turn_set:
@@ -182,18 +182,19 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p, all_
         for pos in np.array([[0,-2],[0,2]]):
             new_pos = pos+p_pos
             if pos[1] == -2:
-                output = check_line(np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
+                output = check_line(selected_p,np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
             else:
-                output = check_line(np.array([[[0,1],[0,2]]])+p_pos,new_pos,WhiteList,BlackList)
+                output = check_line(selected_p,np.array([[[0,1],[0,2]]])+p_pos,new_pos,WhiteList,BlackList)
             if piece_at_that_point(new_pos,WhiteList,BlackList) == 0 and output:
                 surface = surface_creator()
                 draw(screen,surface,"c",new_pos)
+    
                 
     
 def surface_creator():
     surface = p.Surface((512,512),p.SRCALPHA)
     surface.set_colorkey(p.Color("White"))
-    surface.set_alpha(128)
+    surface.set_alpha(25)
     return surface
 
 def draw(screen,surface, r_or_c:str, pos):

@@ -29,6 +29,8 @@ def check_line(selected_p,all_possible, to,w_list,b_list):
         output = piece_at_that_point(list(pos),w_list,b_list)
         if output != 0 and selected_p.get_colour() == output.get_colour():
             return False
+        elif output != 0 and selected_p.get_colour() != output.get_colour() and not (to == output.get_position()).all(axis=0):
+            return False
         else:
             continue
     return True
@@ -119,24 +121,25 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
     # return rook, king, board
 
 
-def check(king, WhiteList ,BlackList):
-    king_movs = king.get_info()[1]
-    k_pos = king.get_position()
-    for mov in king_movs:
-        mov_num = mov*np.arange(1,8).reshape(7,1) + k_pos
-        mov_num = mov_num[(np.max(mov_num,axis=1)<8) & (np.min(mov_num,axis=1)>-1)]
-        for each in mov_num:
-            output = piece_at_that_point(k_pos+each,WhiteList,BlackList)
-            if output != 0 and output.get_colour() != king.get_colour():
-                if ((mov == output.get_info()[1]).all(axis=1)).any():
-                    return True
-                elif output != 0  and output.get_name() == "p":
-                    if ((mov == output.get_colour()).all(axis=1)).any():
-                        return True
-                    elif output.get_name() == "p" and ((mov == output.get_info()[2]).all(axis=1)).any():
-                        return True
-            elif output !=0 and output.get_colour() == king.get_colour():
-                break
+def check(wking, bking, WhiteList ,BlackList):
+    for king in [wking,bking]:
+        king_movs = king.get_info()[1]
+        k_pos = king.get_position()
+        for mov in king_movs:
+            mov_num = mov*np.arange(1,8).reshape(7,1) + k_pos
+            mov_num = mov_num[(np.max(mov_num,axis=1)<8) & (np.min(mov_num,axis=1)>-1)]
+            for each in mov_num:
+                output = piece_at_that_point(each,WhiteList,BlackList)
+                if output != 0 and output.get_colour() != king.get_colour():
+                    if ((mov == output.get_info()[1]).all(axis=1)).any():
+                        return king
+                    elif output != 0  and output.get_name() == "p":
+                        if ((mov == output.get_colour()).all(axis=1)).any():
+                            return king
+                        elif output.get_name() == "p" and ((mov == output.get_info()[2]).all(axis=1)).any():
+                            return king
+                elif output !=0 and output.get_colour() == king.get_colour():
+                    break
             
     return False
 
