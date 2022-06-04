@@ -21,13 +21,13 @@ def piece_at_that_point(coord, w_list, b_list):
         return 0
     
 
-def check_line(all_possible, to,w_list,b_list, k=False):
+def check_line(selected_p,all_possible, to,w_list,b_list):
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1)
     if choosen_dir[0].size == 0:
         return False
     for pos in all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]:
         output = piece_at_that_point(list(pos),w_list,b_list)
-        if output != 0:
+        if output != 0 and selected_p.get_colour() == output.get_colour():
             return False
         else:
             continue
@@ -123,10 +123,9 @@ def check(king, WhiteList ,BlackList):
     king_movs = king.get_info()[1]
     k_pos = king.get_position()
     for mov in king_movs:
-        mov_num = mov*np.arange(1,8).reshape(7,1)
+        mov_num = mov*np.arange(1,8).reshape(7,1) + k_pos
+        mov_num = mov_num[(np.max(mov_num,axis=1)<8) & (np.min(mov_num,axis=1)>-1)]
         for each in mov_num:
-            if np.max(k_pos+each)>7 or np.min(k_pos+each)<0:
-                break
             output = piece_at_that_point(k_pos+each,WhiteList,BlackList)
             if output != 0 and output.get_colour() != king.get_colour():
                 if ((mov == output.get_info()[1]).all(axis=1)).any():

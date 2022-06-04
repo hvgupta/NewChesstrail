@@ -41,7 +41,7 @@ def main():
                     if piece.get_name() == "K" and piece.get_colour() == Colour.b.value:
                         blackKing = piece
                         break
-                # isCheck = check(whiteKing,WhiteList,BlackList)       
+                isCheck = check(whiteKing,WhiteList,BlackList)       
                 # isCheckMate = check_mate(whiteKing,WhiteList,BlackList) 
                 p.display.update()
                 location = p.mouse.get_pos()
@@ -86,21 +86,22 @@ def main():
                         p_info = selected_p.get_info()
                         p_name = selected_p.get_name()
                             
-                        output = check_line(all_possible,player_click[1],WhiteList,BlackList)
+                        output = check_line(selected_p,all_possible,player_click[1],WhiteList,BlackList)
                         all_possible = all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)]
                         
                         if ((all_possible == player_click[1]).all(axis=1)).any() and output:
-                            if attacked_p == 0 and p_name != "p":
+                            if p_name != "p":
                                 move_piece(selected_p,np.array(player_click[1]),c_board.board)
-                            elif p_name == "p":
+                            else:
                                 if attacked_p != 0:
                                     sqSelected = ()
                                     player_click = []
                                     break
                                 else:
-                                    move_piece(selected_p,np.array(player_click[1]),c_board.board)                   
-                                
+                                    move_piece(selected_p,np.array(player_click[1]),c_board.board)
+
                             current_turn = current_turn*-1
+                            
                             if attacked_p != 0:
                                 attacked_p.change_pos(np.array([-1,-1]))
                         elif p_name == "K" and attacked_p == 0:
