@@ -6,6 +6,8 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
         self.position = np.array(position)
         self._Colour = colour
         self.name = self.piece_type.name
+        if self.name in ["K","R"]:
+            self.castle = True
 
     def get_info(self):
         return self.piece_type.value
@@ -27,3 +29,10 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     
     def change_type(self,new_type):
         self.piece_type = new_type
+        
+    def get_castle(self):
+        return self.castle
+
+    def change_castle(self):
+        if self.name in ["K","R"]:
+            self.castle = False

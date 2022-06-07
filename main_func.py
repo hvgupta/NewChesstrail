@@ -36,6 +36,8 @@ def check_line(selected_p,all_possible, to,w_list,b_list):
     return True
 
 def valueDefiner(piece):
+    if piece == False:
+        return 
     p_info = piece.get_info()
     p_colour = piece.get_colour()
     p_pos = piece.get_position()
@@ -61,7 +63,7 @@ def valueDefiner(piece):
 def castle_checker(king,to, board,Whitelist,Blacklist):
     K_pos = king.get_position()
     dif = to[1] - K_pos[1]
-    if not king.get_info()[2]:
+    if not king.get_castle():
         return king, board
     if dif > 0:
         R_pos = to+np.array([0,1])
@@ -74,8 +76,8 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
         there = True
     
     if there:
-        if not piece.get_info()[2]:
-            return king,board
+        if not piece.get_castle():
+            return king,board,0
         
         if dif<0:
             r_val = 3
@@ -116,6 +118,12 @@ def check(wking, bking, WhiteList ,BlackList, piece_return=False):
                             return king if not piece_return else output
                 elif output !=0 and output.get_colour() == king.get_colour():
                     break
+        K_horse_check = type.N.value[1]+k_pos
+        K_horse_check = K_horse_check[(np.max(K_horse_check,axis=1)<8) & (np.min(K_horse_check,axis=1)>-1)]
+        for movs in K_horse_check:
+            output = piece_at_that_point(movs,WhiteList,BlackList)
+            if output != 0  and output.get_info() == type.N.value and output.get_colour() != king.get_colour():
+                return king if not piece_return else output
             
     return False
 
@@ -125,23 +133,25 @@ def check_mate(w_king,b_king, whitelist, blacklist):
     output_arr = []
     for king in [w_king,b_king]:
         old = king.get_position()
-        new_pos = old + np.array([[[0,0]],[[1,0]],[[1,1]],[[0,1]],[[-1,1]],[[-1,0]],[[-1,-1]],[[0,-1]],[[1,-1]]])
-        for pos in new_pos:
-            if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all():
-                continue
-            if piece_at_that_point(pos,whitelist,blacklist) == 0:
-                king.change_pos(pos[0])
-                output = check(w_king,b_king,whitelist,blacklist)
-            else:
-                output = None
-            output_arr.append(output)
-        if not (False in output_arr) and king in output_arr:
-            if king == w_king:
-                w_check_m = True
-            else:
-                b_check_m = True
-        output_arr = []
-        king.change_pos(old)
+        currently_check = check(king,b_king,whitelist,blacklist)
+        if king == currently_check:
+            new_pos = old + np.array([[[1,0]],[[1,1]],[[0,1]],[[-1,1]],[[-1,0]],[[-1,-1]],[[0,-1]],[[1,-1]]])
+            for pos in new_pos:
+                if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all():
+                    continue
+                if piece_at_that_point(pos,whitelist,blacklist) == 0:
+                    king.change_pos(pos[0])
+                    output = check(w_king,b_king,whitelist,blacklist)
+                else:
+                    output = None
+                output_arr.append(output)
+            if not (False in output_arr) and king in output_arr and len(output_arr) > 0:
+                if king == w_king:
+                    w_check_m = True
+                else:
+                    b_check_m = True
+            output_arr = []
+            king.change_pos(old)
         
     if w_check_m or b_check_m:
         check_array = np.array([w_king,b_king])
@@ -156,18 +166,26 @@ def check_mate(w_king,b_king, whitelist, blacklist):
         attacking_p_movs = np.append(attacking_p_movs,attacking_p.get_position())
         attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
         for piece in correct_self_list[0]:
-            if piece.get_name() in ["p", "K"] :
+            if piece.get_name() in ["p"] :
                 continue
             piece_movs = valueDefiner(piece)
             value_data = ((piece_movs - attacking_p_movs.reshape(attacking_p_movs.shape[0],1,1,attacking_p_movs.shape[1]) == 0).all(axis=3))
             to = piece_movs[value_data.any(axis=0)]
             if value_data.any():
-                if check_line(piece,piece_movs,to,whitelist,blacklist):
-                    if check_array[0] == w_king:
-                        w_check_m = not w_check_m
-                    elif check_array[0] == b_king:
-                        b_check_m = not b_check_m
-                    break
+                if len(to.shape) == 1:
+                    if check_line(piece,piece_movs,to,whitelist,blacklist):
+                        if check_array[0] == w_king:
+                            w_check_m = not w_check_m
+                        elif check_array[0] == b_king:
+                            b_check_m = not b_check_m
+                        break
+                elif len(to.shape) > 1:
+                    for movs in to:
+                        if check_line(piece,piece_movs,movs,whitelist,blacklist):
+                            if check_array[0] == w_king:
+                                w_check_m = True
+                            elif check_array[0] == b_king:
+                                b_check_m = True
     
     return w_check_m,b_check_m
         

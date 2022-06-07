@@ -90,32 +90,40 @@ def main():
                         if ((all_possible == player_click[1]).all(axis=1)).any() and output:
                             if p_name != "p":
                                 move_piece(selected_p,np.array(player_click[1]),c_board.board)
+                                if attacked_p != 0 :
+                                    a_old = attacked_p.get_position()
+                                    destroyed_p(attacked_p)
                                 isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
                                 if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
                                     move_piece(selected_p,np.array(player_click[0]),c_board.board)
+                                    attacked_p.change_pos(a_old) if attacked_p != 0 else 0
                                     sqSelected,player_click=reset(sqSelected,player_click)
                                     break
+                                
+                                selected_p.change_castle()
                             else:
                                 if attacked_p != 0:
                                     sqSelected,player_click=reset(sqSelected,player_click)
                                     break
                                 else:
                                     move_piece(selected_p,np.array(player_click[1]),c_board.board)
+                                    if attacked_p != 0:
+                                        a_old = attacked_p.get_position()
+                                    destroyed_p(attacked_p)
                                     if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
                                         move_piece(selected_p,np.array(player_click[0]),c_board.board)
+                                        attacked_p.change_pos(a_old) if attacked_p != 0 else 0
                                         sqSelected,player_click=reset(sqSelected,player_click)
                                         break
 
                             current_turn = current_turn*-1
-                            
-                            if attacked_p != 0:
-                                attacked_p.change_pos(np.array([-1,-1]))
+
                         elif p_name == "K" and attacked_p == 0:
                             selected_p,c_board.board,attacked_p = castle_checker(selected_p,player_click[1],c_board.board,WhiteList,BlackList)
-                            selected_p.piece_type = (p_info[0],p_info[1],False)
-                            a_info = attacked_p.get_info()
-                            attacked_p.piece_type = (a_info[0],a_info[1],False)
-                            current_turn = current_turn*-1
+                            if attacked_p != 0:
+                                selected_p.change_castle()
+                                attacked_p.change_castle()
+                                current_turn = current_turn*-1
                             
                         elif p_info == getattr(type,"p").value and player_click[1] in all_attack:
                             attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
@@ -182,19 +190,21 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
                 break
             surface = surface_creator()
             output = piece_at_that_point(pos,WhiteList,BlackList)
-            if isCheck!= False:
-                if selected_p.get_name() == "K":
-                    other_condition = False
-                else:
-                    checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
+            if isCheck!= False and selected_p.get_name() != "K":
+                checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
+                if isCheck.get_name() != "p":
                     attacking_p_movs = valueDefiner(isCheck)
-                    choosen_dir = np.nonzero(((checked_colour.get_position() == attacking_p_movs).all(axis=2))*1)
-                    if choosen_dir[0].size == 0:
-                        break
-                    attacking_p_movs = attacking_p_movs[choosen_dir[0][0],0:choosen_dir[1][0]]
-                    attacking_p_movs = np.append(attacking_p_movs,isCheck.get_position())
-                    attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
-                    other_condition = ((attacking_p_movs == pos).all(axis=1)).any()
+                else:
+                    p_movs, attacking_p_movs = valueDefiner(isCheck)
+                    attacking_p_movs = np.expand_dims(attacking_p_movs,axis=1)
+                choosen_dir = np.nonzero(((checked_colour.get_position() == attacking_p_movs).all(axis=2))*1)
+                if choosen_dir[0].size == 0:
+                    break
+                attacking_p_movs = attacking_p_movs[choosen_dir[0][0],0:choosen_dir[1][0]+1]
+                attacking_p_movs = np.append(attacking_p_movs,isCheck.get_position())
+                attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
+                other_condition = ((attacking_p_movs == pos).all(axis=1)).any()
+                
             if output == 0 and other_condition:
                 old = selected_p.get_position()
                 selected_p.change_pos(pos)
@@ -204,11 +214,18 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
                     continue
                 else:
                     draw(screen,surface,"c",pos)
+                    
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p" and other_condition:
                 old = selected_p.get_position()
                 selected_p.change_pos(pos)
+                if isCheck != False:
+                    a_old = isCheck.get_position()
+                    if (pos == isCheck.get_position()).all():
+                        isCheck.change_pos(np.array([-1,-1]))
                 Check = check(king_array[0],king_array[1],WhiteList,BlackList)
                 selected_p.change_pos(old)
+                if isCheck != False:
+                    isCheck.change_pos(a_old)
                 if Check != False and Check.get_colour() == selected_p.get_colour():
                     continue
                 else:
@@ -233,7 +250,7 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
                 else:
                     draw(screen,surface,"r",attack)
     
-    if selected_p.get_name() == "K" and selected_p.get_info()[2]:
+    if selected_p.get_name() == "K" and selected_p.get_castle():
         p_pos = selected_p.get_position()
         for pos in np.array([[0,-2],[0,2]]):
             new_pos = pos+p_pos
@@ -257,6 +274,10 @@ def draw(screen,surface, r_or_c:str, pos):
     else:
         p.draw.rect(surface,(255,0,0),p.Rect(pos[1]*SQ_SIZE,pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
     screen.blit(surface,(0,0))
+
+def destroyed_p(attacked_p):
+    if attacked_p != 0:
+        attacked_p.change_pos(np.array([-1,-1]))
 
 if __name__ == "__main__":    
     main()
