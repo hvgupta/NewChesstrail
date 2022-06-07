@@ -35,7 +35,6 @@ def check_line(selected_p,all_possible, to,w_list,b_list):
             continue
     return True
 
-
 def valueDefiner(piece):
     p_info = piece.get_info()
     p_colour = piece.get_colour()
@@ -50,14 +49,15 @@ def valueDefiner(piece):
         all_attack = p_pos + p_info[2]*p_colour
         all_attack = all_attack[(np.max(all_attack,axis=1) < 8) & (np.min(all_attack,axis=1) > -1)]
         return all_possible, all_attack
+    
     elif p_name == "N" or p_name == "K":
         all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
         return all_possible
+    
     else:
         all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*np.arange(1,8).reshape(7,1)*p_colour
         return all_possible
     
-
 def castle_checker(king,to, board,Whitelist,Blacklist):
     K_pos = king.get_position()
     dif = to[1] - K_pos[1]
@@ -94,35 +94,11 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
         board[K_pos[0]][k_val] = old
         
         return king, board,piece
-        
-        
-    # R_pos = rook.get_position()
-    # K_pos = king.get_position()
-    # if rook.get_info()[2] and king.get_info()[2]:
-    #     dif = R_pos[1] - K_pos[1]
-    #     if dif < 0:
-    #         r_val = 3
-    #         k_val = 2
-    #         rook.change_pos(np.array([R_pos[0],r_val]))
-    #         king.change_pos(np.array([K_pos[0],k_val]))
-    #     elif dif > 0:
-    #         r_val = 5
-    #         k_val = 6
-    #         rook.change_pos(np.array([R_pos[0],r_val]))
-    #         king.change_pos(np.array([K_pos[0],k_val]))
-        
-    #     old = board[R_pos[0]][R_pos[1]]
-    #     board[R_pos[0]][R_pos[1]] = "--"
-    #     board[R_pos[0]][r_val] = old
-    #     old = board[K_pos[0]][K_pos[1]]
-    #     board[K_pos[0]][K_pos[1]] = "--"
-    #     board[K_pos[0]][k_val] = old
-    
-    # return rook, king, board
 
-
-def check(wking, bking, WhiteList ,BlackList):
+def check(wking, bking, WhiteList ,BlackList, piece_return=False):
     for king in [wking,bking]:
+        if king == None:
+            break
         king_movs = king.get_info()[1]
         k_pos = king.get_position()
         for mov in king_movs:
@@ -132,23 +108,66 @@ def check(wking, bking, WhiteList ,BlackList):
                 output = piece_at_that_point(each,WhiteList,BlackList)
                 if output != 0 and output.get_colour() != king.get_colour():
                     if ((mov == output.get_info()[1]).all(axis=1)).any():
-                        return king
+                        return king if not piece_return else output
                     elif output != 0  and output.get_name() == "p":
-                        if ((mov == output.get_colour()).all(axis=1)).any():
-                            return king
+                        if ((mov == output.get_info()[2]).all(axis=1)).any():
+                            return king if not piece_return else output
                         elif output.get_name() == "p" and ((mov == output.get_info()[2]).all(axis=1)).any():
-                            return king
+                            return king if not piece_return else output
                 elif output !=0 and output.get_colour() == king.get_colour():
                     break
             
     return False
 
-def check_mate(king, whitelist, blacklist):
-    # old_pos = king.get_position()
-    # all_possible = valueDefiner(king)
-    # all_possible = all_possible[(np.max(all_possible,axis=2)<8)&(np.min(all_possible,axis=2)>-1)]
-    # for moves in all_possible:
-    #     output = piece_at_that_point(moves,whitelist,blacklist)
-    #     king.change_pos(moves[0])
-    pass
+def check_mate(w_king,b_king, whitelist, blacklist):
+    w_check_m = False
+    b_check_m = False
+    output_arr = []
+    for king in [w_king,b_king]:
+        old = king.get_position()
+        new_pos = old + np.array([[[0,0]],[[1,0]],[[1,1]],[[0,1]],[[-1,1]],[[-1,0]],[[-1,-1]],[[0,-1]],[[1,-1]]])
+        for pos in new_pos:
+            if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all():
+                continue
+            if piece_at_that_point(pos,whitelist,blacklist) == 0:
+                king.change_pos(pos[0])
+                output = check(w_king,b_king,whitelist,blacklist)
+            else:
+                output = None
+            output_arr.append(output)
+        if not (False in output_arr) and king in output_arr:
+            if king == w_king:
+                w_check_m = True
+            else:
+                b_check_m = True
+        output_arr = []
+        king.change_pos(old)
+        
+    if w_check_m or b_check_m:
+        check_array = np.array([w_king,b_king])
+        check_array = check_array[np.array([w_check_m,b_check_m])]
+        correct_self_list = np.array([whitelist,blacklist])[np.array([w_check_m,b_check_m])]
+        attacking_p = check(check_array[0], None,whitelist,blacklist,True)
+        attacking_p_movs = valueDefiner(attacking_p)
+        choosen_dir = np.nonzero(((check_array[0].get_position() == attacking_p_movs).all(axis= 2))*1)
+        if choosen_dir[0].size == 0:
+            return w_check_m,b_check_m
+        attacking_p_movs = attacking_p_movs[choosen_dir[0][0], 0:choosen_dir[1][0]]
+        attacking_p_movs = np.append(attacking_p_movs,attacking_p.get_position())
+        attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
+        for piece in correct_self_list[0]:
+            if piece.get_name() in ["p", "K"] :
+                continue
+            piece_movs = valueDefiner(piece)
+            value_data = ((piece_movs - attacking_p_movs.reshape(attacking_p_movs.shape[0],1,1,attacking_p_movs.shape[1]) == 0).all(axis=3))
+            to = piece_movs[value_data.any(axis=0)]
+            if value_data.any():
+                if check_line(piece,piece_movs,to,whitelist,blacklist):
+                    if check_array[0] == w_king:
+                        w_check_m = not w_check_m
+                    elif check_array[0] == b_king:
+                        b_check_m = not b_check_m
+                    break
+    
+    return w_check_m,b_check_m
         
