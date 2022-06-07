@@ -133,20 +133,23 @@ def main():
             position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing])
         elif len(player_click) == 1 and selected_p != 0 and selected_p.get_name() == "p":
             position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing],all_attack)
-        clock.tick(15)
-        p.display.flip()
         c_m = False
-        if w_check:
+        if w_check or isCheck == whiteKing:
             k_pos = whiteKing.get_position()
             c_m = True
-        if b_check:
+        if b_check or isCheck == blackKing:
             k_pos = blackKing.get_position()
             c_m = True
         
         if c_m:
             screen.blit(p.transform.scale(p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+            
+        if w_check or b_check:
             running = False
+        clock.tick(15)
+        p.display.flip()
 
+        
 
 def gameState(screen, board):
     drawboard(screen)
@@ -241,9 +244,7 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
             if piece_at_that_point(new_pos,WhiteList,BlackList) == 0 and output:
                 surface = surface_creator()
                 draw(screen,surface,"c",new_pos)
-    
-                
-    
+                 
 def surface_creator():
     surface = p.Surface((512,512),p.SRCALPHA)
     surface.set_colorkey(p.Color("White"))
