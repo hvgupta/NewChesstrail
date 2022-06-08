@@ -30,14 +30,8 @@ def main():
         player_click = []
         return sqSelected,player_click
 
-    for piece in WhiteList:
-        if piece.get_name() == "K" and piece.get_colour() == Colour.w.value:
-            whiteKing = piece
-            break
-    for piece in BlackList:
-        if piece.get_name() == "K" and piece.get_colour() == Colour.b.value:
-            blackKing = piece
-            break 
+    whiteKing = WhiteList[12]
+    blackKing = BlackList[4]
     
     while running:
 

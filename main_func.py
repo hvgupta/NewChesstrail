@@ -20,7 +20,6 @@ def piece_at_that_point(coord, w_list, b_list):
     else:
         return 0
     
-
 def check_line(selected_p,all_possible, to,w_list,b_list):
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1)
     if choosen_dir[0].size == 0:
@@ -61,12 +60,12 @@ def valueDefiner(piece):
         return all_possible
     
 def castle_checker(king,to, board,Whitelist,Blacklist):
+    if not king.get_castle():
+        return king, board,0
     K_pos = king.get_position()
     dif = to[1] - K_pos[1]
-    if not king.get_castle():
-        return king, board
     if dif > 0:
-        R_pos = to+np.array([0,1])
+        R_pos = to + np.array([0,1])
     else:
         R_pos = to + np.array([0,-2])
 
@@ -184,8 +183,14 @@ def check_mate(w_king,b_king, whitelist, blacklist):
                         if check_line(piece,piece_movs,movs,whitelist,blacklist):
                             if check_array[0] == w_king:
                                 w_check_m = True
-                            elif check_array[0] == b_king:
+                            else:
+                                w_check_m = False
+                            if check_array[0] == b_king:
                                 b_check_m = True
+                            else:
+                                b_check_m = False
+                        else:
+                            break
     
     return w_check_m,b_check_m
         
