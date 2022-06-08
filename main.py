@@ -250,6 +250,8 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
             new_pos = pos+p_pos
             if pos[1] == -2:
                 output = check_line(selected_p,np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
+                if piece_at_that_point(new_pos+np.array([0,-1]),WhiteList,BlackList):
+                    output = False
             else:
                 output = check_line(selected_p,np.array([[[0,1],[0,2]]])+p_pos,new_pos,WhiteList,BlackList)
             if piece_at_that_point(new_pos,WhiteList,BlackList) == 0 and output:

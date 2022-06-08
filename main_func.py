@@ -77,6 +77,9 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
     if there:
         if not piece.get_castle():
             return king,board,0
+
+        if dif < 0  and piece_at_that_point(to+np.array([0,-1]),Whitelist,Blacklist) != 0:
+            return king,board,0
         
         if dif<0:
             r_val = 3
