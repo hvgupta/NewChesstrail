@@ -7,4 +7,5 @@ def randomPchooser(blacklist):
 
 def randomMovchooser(all_possible):
     return random.choice(all_possible)
-            
+
+# def check_mov_chooser(all_possible,all_attack=None):
