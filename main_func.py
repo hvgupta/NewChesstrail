@@ -161,7 +161,7 @@ def check_mate(w_king,b_king, whitelist, blacklist):
         check_array = check_array[np.array([w_check_m,b_check_m])]
         correct_self_list = np.array([whitelist,blacklist])[np.array([w_check_m,b_check_m])]
         attacking_p = check(check_array[0], None,whitelist,blacklist,True)
-        attacking_p_movs = valueDefiner(attacking_p)
+        attacking_p_movs,skip = valueDefiner(attacking_p)
         choosen_dir = np.nonzero(((check_array[0].get_position() == attacking_p_movs).all(axis= 2))*1)
         if choosen_dir[0].size == 0:
             return w_check_m,b_check_m
@@ -171,7 +171,7 @@ def check_mate(w_king,b_king, whitelist, blacklist):
         for piece in correct_self_list[0]:
             if piece.get_name() in ["p"] :
                 continue
-            piece_movs = valueDefiner(piece)
+            piece_movs, skip = valueDefiner(piece)
             value_data = ((piece_movs - attacking_p_movs.reshape(attacking_p_movs.shape[0],1,1,attacking_p_movs.shape[1]) == 0).all(axis=3))
             to = piece_movs[value_data.any(axis=0)]
             if value_data.any():
