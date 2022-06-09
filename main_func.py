@@ -119,6 +119,8 @@ def check(wking, bking, WhiteList ,BlackList, piece_return=False):
                             return king if not piece_return else output
                         elif output.get_name() == "p" and ((mov == output.get_info()[2]).all(axis=1)).any():
                             return king if not piece_return else output
+                    else:
+                        break
                 elif output !=0 and output.get_colour() == king.get_colour():
                     break
         K_horse_check = type.N.value[1]+k_pos

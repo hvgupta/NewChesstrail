@@ -8,4 +8,7 @@ def randomPchooser(blacklist):
 def randomMovchooser(all_possible):
     return random.choice(all_possible)
 
-# def check_mov_chooser(all_possible,all_attack=None):
+# def check_mov_chooser(w_king, b_king, whiteList, blackList,all_possible,all_attack=None):
+#     piece = check(w_king,b_king,whiteList,blackList,True)
+#     if piece != False:
+        
