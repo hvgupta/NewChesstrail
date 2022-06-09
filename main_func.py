@@ -137,8 +137,6 @@ def destroyed_p(attacked_p):
     if attacked_p != 0:
         attacked_p.change_pos(np.array([-100,-100]))
 
-
-
 def move_piece(piece, to:list, board):
     old_pos = piece.get_position()
     piece.change_pos(to)
@@ -301,37 +299,43 @@ def check_mate(w_king,b_king, whitelist, blacklist):
         correct_self_list = np.array([whitelist,blacklist])[np.array([w_check_m,b_check_m])]
         attacking_p = check(check_array[0], None,whitelist,blacklist,True)
         attacking_p_movs,skip = valueDefiner(attacking_p)
-        choosen_dir = np.nonzero(((check_array[0].get_position() == attacking_p_movs).all(axis= 2))*1)
-        if choosen_dir[0].size == 0:
+        attacking_phile = get_attack_phile(check_array[0],attacking_p_movs,attacking_p.get_position())
+        if attacking_phile.any() == False:
             return w_check_m,b_check_m
-        attacking_p_movs = attacking_p_movs[choosen_dir[0][0], 0:choosen_dir[1][0]]
-        attacking_p_movs = np.append(attacking_p_movs,attacking_p.get_position())
-        attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
         for piece in correct_self_list[0]:
             if piece.get_name() in ["p"] :
                 continue
-            piece_movs, skip = valueDefiner(piece)
-            value_data = ((piece_movs - attacking_p_movs.reshape(attacking_p_movs.shape[0],1,1,attacking_p_movs.shape[1]) == 0).all(axis=3))
-            to = piece_movs[value_data.any(axis=0)]
-            if value_data.any():
-                if len(to.shape) == 1:
-                    if check_line(piece,piece_movs,to,whitelist,blacklist):
-                        if check_array[0] == w_king:
-                            w_check_m = not w_check_m
-                        elif check_array[0] == b_king:
-                            b_check_m = not b_check_m
-                        break
-                elif len(to.shape) > 1:
-                    for movs in to:
-                        if check_line(piece,piece_movs,movs,whitelist,blacklist):
-                            if piece.get_name() == "K" and not (movs == attacking_p.get_position()).all():
-                                break
-                            if check_array[0] == w_king:
-                                w_check_m = False
-                            elif check_array[0] == b_king:
-                                b_check_m = False
-                        else:
+            to,piece_movs = move_to_attack_line(piece,attacking_phile,True)
+            if to.size > 0:
+                for movs in to:
+                    if check_line(piece,piece_movs,movs,whitelist,blacklist):
+                        if piece.get_name() == "K" and not (movs == attacking_p.get_position()).all():
                             break
+                        if check_array[0] == w_king:
+                            w_check_m = False
+                        elif check_array[0] == b_king:
+                            b_check_m = False
+                    else:
+                        break
     
     return w_check_m,b_check_m
-        
+
+def get_attack_phile(king, all_possible,p_pos):
+    choosen_dir = np.nonzero(((king.get_position() == all_possible).all(axis=2))*1)
+    if choosen_dir[0].size == 0:
+        return False
+    attacking_movs = all_possible[choosen_dir[0][0], 0:choosen_dir[1][0]+1]
+    attacking_movs = np.append(attacking_movs,p_pos)
+    attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
+    return attacking_movs
+
+def move_to_attack_line(piece, attack_movs, p_pos_return=False):
+    p_movs = valueDefiner(piece)
+    p_movs = p_movs[0]
+    attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
+    t_table = ((p_movs-attack_movs) == 0).all(axis=3)
+    to = p_movs[t_table.any(axis=0)]
+    if p_pos_return:
+        return to,p_movs
+    else:
+        return to

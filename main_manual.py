@@ -1,6 +1,6 @@
 import pygame as p
 from board import *
-from AI import *
+from main_func import *
         
 def main():
     

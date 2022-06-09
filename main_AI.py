@@ -49,7 +49,7 @@ def main():
             
         elif current_turn == AI:
             if player_click_index == 0:
-                AI_select_p_pos = randomPchooser(BlackList)
+                AI_select_p_pos = check_mov_chooser(whiteKing,blackKing,WhiteList,BlackList)
                 player_click.append(tuple(AI_select_p_pos))
                 player_click_index+=1
                 
