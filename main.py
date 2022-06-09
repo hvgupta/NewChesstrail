@@ -210,7 +210,7 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
             if isCheck!= False and selected_p.get_name() != "K":
                 checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
                 if isCheck.get_name() != "p":
-                    attacking_p_movs = valueDefiner(isCheck)
+                    attacking_p_movs,skip = valueDefiner(isCheck)
                 else:
                     p_movs, attacking_p_movs = valueDefiner(isCheck)
                     attacking_p_movs = np.expand_dims(attacking_p_movs,axis=1)
