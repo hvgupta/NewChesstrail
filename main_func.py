@@ -71,7 +71,7 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
 
     there  = False
     piece = piece_at_that_point(R_pos,Whitelist,Blacklist)
-    if piece.get_name() == "R" and piece.get_colour() == king.get_colour():
+    if piece != 0 and piece.get_name() == "R" and piece.get_colour() == king.get_colour():
         there = True
     
     if there:
@@ -98,6 +98,7 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
         board[K_pos[0]][k_val] = old
         
         return king, board,piece
+    return king, board, 0
 
 def check(wking, bking, WhiteList ,BlackList, piece_return=False):
     for king in [wking,bking]:
@@ -184,13 +185,11 @@ def check_mate(w_king,b_king, whitelist, blacklist):
                 elif len(to.shape) > 1:
                     for movs in to:
                         if check_line(piece,piece_movs,movs,whitelist,blacklist):
+                            if piece.get_name() == "K" and not (movs == attacking_p.get_position()).all():
+                                break
                             if check_array[0] == w_king:
-                                w_check_m = True
-                            else:
                                 w_check_m = False
-                            if check_array[0] == b_king:
-                                b_check_m = True
-                            else:
+                            elif check_array[0] == b_king:
                                 b_check_m = False
                         else:
                             break
