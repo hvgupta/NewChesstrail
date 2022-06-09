@@ -86,10 +86,7 @@ def main():
                 sqSelected,player_click=reset(sqSelected,player_click)
                 continue
             
-            if selected_p.get_name() == "p":
-                all_possible, all_attack = valueDefiner(selected_p)
-            else:
-                all_possible = valueDefiner(selected_p)
+            all_possible, all_attack = valueDefiner(selected_p)
         
         elif len(player_click) == 2:
 

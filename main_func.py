@@ -53,11 +53,11 @@ def valueDefiner(piece):
     
     elif p_name == "N" or p_name == "K":
         all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
-        return all_possible
+        return all_possible,None
     
     else:
         all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*np.arange(1,8).reshape(7,1)*p_colour
-        return all_possible
+        return all_possible,None
     
 def castle_checker(king,to, board,Whitelist,Blacklist):
     if not king.get_castle():
