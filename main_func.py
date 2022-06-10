@@ -324,7 +324,7 @@ def get_attack_phile(king, all_possible,p_pos):
     choosen_dir = np.nonzero(((king.get_position() == all_possible).all(axis=2))*1)
     if choosen_dir[0].size == 0:
         return False
-    attacking_movs = all_possible[choosen_dir[0][0], 0:choosen_dir[1][0]+1]
+    attacking_movs = all_possible[choosen_dir[0][0], 0:choosen_dir[1][0]]
     attacking_movs = np.append(attacking_movs,p_pos)
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
     return attacking_movs

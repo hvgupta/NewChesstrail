@@ -49,23 +49,24 @@ def main():
             
         elif current_turn == AI:
             if player_click_index == 0:
-                AI_select_p_pos = check_mov_chooser(whiteKing,blackKing,WhiteList,BlackList)
-                player_click.append(tuple(AI_select_p_pos))
-                player_click_index+=1
+                selected_p,p_move = check_mov_chooser(whiteKing,blackKing,WhiteList,BlackList)
+                all_possible,all_attack = valueDefiner(selected_p)
+                player_click.append(tuple(selected_p.get_position()))
+                player_click.append(tuple(p_move))
                 
-            elif player_click_index == 1:
-                pos_selected = np.array([-1,-1])
-                AI_move_array = np.copy(all_possible)
-                if piece_at_that_point(AI_select_p_pos,WhiteList,BlackList).get_name() == "p":
-                    AI_move_array = np.append(AI_move_array,all_attack)
-                    AI_move_array = AI_move_array.reshape((int(AI_move_array.shape[0]/2),1,2))
-                AI_move_array = AI_move_array[(np.max(AI_move_array,axis=2) < 8) & (np.min(AI_move_array,axis=2)>-1)]
-                if AI_move_array.shape[0] != 0:
-                    while np.max(pos_selected)>7 or np.min(pos_selected)<0:
-                        pos_selected = np.array(randomMovchooser(AI_move_array))
-                AI_move_array = np.expand_dims(AI_move_array,axis=1)
-                player_click.append(tuple(pos_selected))
-                player_click_index = 0
+            # elif player_click_index == 1:
+            #     pos_selected = np.array([-1,-1])
+            #     AI_move_array = np.copy(all_possible)
+            #     if piece_at_that_point(AI_select_p_pos,WhiteList,BlackList).get_name() == "p":
+            #         AI_move_array = np.append(AI_move_array,all_attack)
+            #         AI_move_array = AI_move_array.reshape((int(AI_move_array.shape[0]/2),1,2))
+            #     AI_move_array = AI_move_array[(np.max(AI_move_array,axis=2) < 8) & (np.min(AI_move_array,axis=2)>-1)]
+            #     if AI_move_array.shape[0] != 0:
+            #         while np.max(pos_selected)>7 or np.min(pos_selected)<0:
+            #             pos_selected = np.array(randomMovchooser(AI_move_array))
+            #     AI_move_array = np.expand_dims(AI_move_array,axis=1)
+            #     player_click.append(tuple(pos_selected))
+            #     player_click_index = 0
                 
                 
         if len(player_click) == 1:

@@ -2,30 +2,29 @@ import random
 from main_func import *
     
 
-def randomPchooser(blacklist):
-    return (random.choice(blacklist)).get_position()
-
-def randomMovchooser(all_possible):
-    return random.choice(all_possible)
-
+def randomchooser(blacklist):
+    return random.choice(blacklist)
+    
 def check_mov_chooser(w_king, b_king, whiteList, blackList):
     piece = check(w_king,b_king,whiteList,blackList,True)
     reduced_possible = []
+    to_array = []
     if piece == False:
         for b_piece in blackList:
             possible = False
             p_movs = b_piece.get_info()[1]
             p_pos = b_piece.get_position()
+            piece_array = []
             for movs in p_movs:
                 if np.max(movs+p_pos)>7 or np.min(movs+p_pos)<0:
                     continue
                 output = piece_at_that_point(movs+p_pos,whiteList,blackList)
                 if (output == 0 or output.get_colour() == Colour.w.value) and b_piece.get_name() != "p":
                     possible = True
-                    break
+                    piece_array.append(movs)
                 elif b_piece.get_name() == "p" and output == 0:
                     possible = True
-                    break
+                    piece_array.append(movs)
             if b_piece.get_name() == "p":
                 p_attacks = b_piece.get_info()[2]
                 for atts in p_attacks:
@@ -34,9 +33,10 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                     output = piece_at_that_point(atts+p_pos,whiteList,blackList)
                     if output != 0:
                         possible = True
-                        break
+                        piece_array.append(atts)
             if possible:
                 reduced_possible.append(b_piece)
+                to_array.append(piece_array)
     else:
         all_movs,skip = valueDefiner(piece)
         for b_piece in blackList:
@@ -50,5 +50,9 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                 for mov in to:
                     if check_line(b_piece,p_pos,mov,whiteList,blackList):
                         reduced_possible.append(b_piece)
-                        break
-    return randomPchooser(reduced_possible)
+                        to_array.append([mov-b_piece.get_position()])
+    piece_choosen = randomchooser(reduced_possible)
+    piece_index = reduced_possible.index(piece_choosen)
+    move_array = to_array[piece_index]
+    mov_choosen = randomchooser(move_array) + piece_choosen.get_position()
+    return piece_choosen,mov_choosen 
