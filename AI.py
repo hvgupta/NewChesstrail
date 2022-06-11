@@ -65,7 +65,6 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                         reduced_possible.append(b_piece)
                         to_array.append([mov-b_piece.get_position()])
     piece_choosen = randomchooser(reduced_possible)
-    
     # print(piece_choosen.get_name(), piece_choosen.get_position())
     piece_index = reduced_possible.index(piece_choosen)
     move_array = to_array[piece_index]

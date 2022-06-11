@@ -144,7 +144,10 @@ def move_piece(piece, to:list, board):
     old_pos = piece.get_position()
     piece.change_pos(to)
     old = board[old_pos[0]][old_pos[1]]
-    board[to[0]][to[1]] = old
+    try:
+        board[to[0]][to[1]] = old
+    except:
+        board[to[0][0]][to[0][1]]
     board[old_pos[0]][old_pos[1]] = "--"
                 
 def piece_at_that_point(coord, w_list, b_list):
