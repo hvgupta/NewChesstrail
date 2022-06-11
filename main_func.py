@@ -96,9 +96,12 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
                 pass
             elif output.get_colour() != selected_p.get_colour():
                 old = selected_p.get_position()
+                a_old = output.get_position()
                 selected_p.change_pos(pos)
+                output.change_pos(np.array([-1,-1]))
                 Check = check(king_array[0],king_array[1],WhiteList,BlackList)
                 selected_p.change_pos(old)
+                output.change_pos(a_old)
                 if Check != False and Check.get_colour() == selected_p.get_colour():
                     continue
                 else:
@@ -182,7 +185,7 @@ def valueDefiner(piece):
             all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour*np.arange(1,2).reshape(1,1)
         else:
             all_possible = p_pos + np.expand_dims(p_info[1][0:1],axis=1)*p_colour*np.arange(1,2).reshape(1,1)
-        all_attack = p_pos + p_info[2]*p_colour
+        all_attack = p_pos + p_info[2]*p_colour*np.arange(1,2).reshape(1,1)
         all_attack = all_attack[(np.max(all_attack,axis=1) < 8) & (np.min(all_attack,axis=1) > -1)]
         return all_possible, all_attack
     
@@ -330,12 +333,19 @@ def get_attack_phile(king, all_possible,p_pos):
     return attacking_movs
 
 def move_to_attack_line(piece, attack_movs, p_pos_return=False):
-    p_movs = valueDefiner(piece)
-    p_movs = p_movs[0]
-    attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
-    t_table = ((p_movs-attack_movs) == 0).all(axis=3)
-    to = p_movs[t_table.any(axis=0)]
-    if p_pos_return:
-        return to,p_movs
-    else:
-        return to
+    p_movs,all_attack = valueDefiner(piece)
+    if piece.get_name() != "p":
+        attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
+        t_table = ((p_movs-attack_movs) == 0).all(axis=3)
+        to = p_movs[t_table.any(axis=0)]
+        if p_pos_return:
+            return to,p_movs
+        else:
+            return to
+    elif piece.get_name() == "p":
+        t_table = ((all_attack-np.expand_dims(attack_movs,axis=1)) == 0).all(axis=2)
+        to = all_attack[t_table.reshape((all_attack.shape[0]))]
+        if p_pos_return:
+            return to,np.expand_dims(all_attack,axis=1)
+        else:
+            return to

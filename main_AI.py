@@ -145,9 +145,9 @@ def main():
         gameState(screen,c_board.board)
         isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
         w_check,b_check = check_mate(whiteKing,blackKing,WhiteList,BlackList)
-        if len(player_click) == 1 and selected_p != 0 and selected_p.get_name() != "p" and current_turn == HUMAN:
+        if len(player_click) == 1 and selected_p != 0 and selected_p.get_name() != "p":
             position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing])
-        elif len(player_click) == 1 and selected_p != 0 and selected_p.get_name() == "p" and current_turn == HUMAN:
+        elif len(player_click) == 1 and selected_p != 0 and selected_p.get_name() == "p":
             position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing],all_attack)
         c_m = False
         if w_check or isCheck == whiteKing:
