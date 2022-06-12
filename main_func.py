@@ -144,10 +144,7 @@ def move_piece(piece, to:list, board):
     old_pos = piece.get_position()
     piece.change_pos(to)
     old = board[old_pos[0]][old_pos[1]]
-    try:
-        board[to[0]][to[1]] = old
-    except:
-        board[to[0][0]][to[0][1]]
+    board[to[0]][to[1]] = old
     board[old_pos[0]][old_pos[1]] = "--"
                 
 def piece_at_that_point(coord, w_list, b_list):
@@ -256,7 +253,7 @@ def check(wking, bking, WhiteList ,BlackList, piece_return=False):
                     if ((mov == output.get_info()[1]).all(axis=1)).any() and output.get_name() != "p":
                         return king if not piece_return else output
                     elif output != 0  and output.get_name() == "p":
-                        if ((mov == output.get_info()[2]).all(axis=1)).any():
+                        if ((mov == output.get_info()[2]).all(axis=1)).any() and np.where(each == mov_num) == 1:
                             return king if not piece_return else output
                         else:
                             break
@@ -287,7 +284,7 @@ def check_mate(w_king,b_king, whitelist, blacklist):
                     continue
                 if piece_at_that_point(pos,whitelist,blacklist) == 0:
                     king.change_pos(pos[0])
-                    output = check(w_king,b_king,whitelist,blacklist)
+                    output = check(king,None,whitelist,blacklist)
                 else:
                     output = None
                 output_arr.append(output)
@@ -309,8 +306,6 @@ def check_mate(w_king,b_king, whitelist, blacklist):
         if attacking_phile.any() == False:
             return w_check_m,b_check_m
         for piece in correct_self_list[0]:
-            if piece.get_name() in ["p"] :
-                continue
             to,piece_movs = move_to_attack_line(piece,attacking_phile,True)
             if to.size > 0:
                 for movs in to:
@@ -337,8 +332,8 @@ def get_attack_phile(king, all_possible,p_pos):
 
 def move_to_attack_line(piece, attack_movs, p_pos_return=False):
     p_movs,all_attack = valueDefiner(piece)
+    attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
     if piece.get_name() != "p":
-        attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
         t_table = ((p_movs-attack_movs) == 0).all(axis=3)
         to = p_movs[t_table.any(axis=0)]
         if p_pos_return:
@@ -346,9 +341,10 @@ def move_to_attack_line(piece, attack_movs, p_pos_return=False):
         else:
             return to
     elif piece.get_name() == "p":
-        t_table = ((all_attack-np.expand_dims(attack_movs,axis=1)) == 0).all(axis=2)
-        to = all_attack[t_table.reshape((all_attack.shape[0]))]
+        all_attack = np.expand_dims(all_attack,axis=1)
+        t_table = ((all_attack-attack_movs) == 0).all(axis=3)
+        to = all_attack[t_table.any(axis=0)]
         if p_pos_return:
-            return to,np.expand_dims(all_attack,axis=1)
+            return to,all_attack
         else:
             return to
