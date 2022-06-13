@@ -70,7 +70,6 @@ def main():
                         
                     output = check_line(selected_p,all_possible,player_click[1],WhiteList,BlackList)
                     all_possible = all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)]
-                    print((all_possible == player_click[1]))
                     if ((all_possible == player_click[1]).all(axis=1)).any() and output:
                         if p_name != "p":
                             move_piece(selected_p,np.array(player_click[1]),c_board.board)

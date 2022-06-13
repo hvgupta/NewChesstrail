@@ -11,6 +11,8 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
     to_array = []
     if piece == False:
         for b_piece in blackList:
+            if (b_piece.get_position() == np.array([-1,-1])).all():
+                continue
             possible = False
             p_movs = b_piece.get_info()[1]
             p_pos = b_piece.get_position()
@@ -39,47 +41,51 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                 to_array.append(piece_array)
     else:
         all_movs,skip = valueDefiner(piece)
-        for b_piece in blackList:
-            attacked_pos = get_attack_phile(b_king,all_movs,piece.get_position())
-            if attacked_pos.any() != False:
-                pass
-            else:
-                continue
-            if b_piece.get_name() == "K":
-                there = False
-                piece_array = []
-                bK_movs = b_piece.get_info()[1] + b_piece.get_position()
-                bK_movs = bK_movs[(np.max(bK_movs,axis=1)<8)&(np.min(bK_movs,axis=1)>-1)]
-                for movs in bK_movs:
-                    if (movs == piece.get_position()).all():
-                        a_old = piece.get_position()
-                        destroyed_p(piece)
-                        moving_to = piece_at_that_point(movs,whiteList,blackList)
-                        piece.change_pos(a_old)
-                    else:
-                        moving_to = piece_at_that_point(movs,whiteList,blackList)
-                    if (moving_to == 0 or moving_to.get_colour() != Colour.b.value) and check(None,b_king,whiteList,blackList) != b_king:
-                        there = True
-                        piece_array.append(movs-b_king.get_position())
-                if there:
-                    reduced_possible.append(b_piece)
-                    to_array.append(piece_array)   
-            to,p_pos = move_to_attack_line(b_piece,attacked_pos,True)
-            if to.size > 0:
-                for mov in to:
-                    if len(mov.shape) == 2:
-                        mov = mov.reshape((2))
-                    if check_line(b_piece,p_pos,mov,whiteList,blackList):
+        attacked_pos = get_attack_phile(b_king,all_movs,piece.get_position())
+        print((attacked_pos != np.array([-1,-1])).all())
+        if (attacked_pos != np.array([-1,-1])).all():
+            for b_piece in blackList:
+                if b_piece.get_name() == "K":
+                    there = False
+                    piece_array = []
+                    bK_movs = b_piece.get_info()[1] + b_piece.get_position()
+                    bK_movs = bK_movs[(np.max(bK_movs,axis=1)<8)&(np.min(bK_movs,axis=1)>-1)]
+                    for movs in bK_movs:
+                        if (movs == piece.get_position()).all():
+                            a_old = piece.get_position()
+                            destroyed_p(piece)
+                            moving_to = piece_at_that_point(movs,whiteList,blackList)
+                            piece.change_pos(a_old)
+                        else:
+                            moving_to = piece_at_that_point(movs,whiteList,blackList)
+                            isCheck = check(None,b_king,whiteList,blackList)
+                            if (moving_to == 0 or moving_to.get_colour() != Colour.b.value) and isCheck != b_king:
+                                there = True
+                                piece_array.append(movs-b_king.get_position())
+                    if there:
                         reduced_possible.append(b_piece)
-                        to_array.append([mov-b_piece.get_position()])
+                        to_array.append(piece_array)   
+                to,p_pos = move_to_attack_line(b_piece,attacked_pos,True)
+                if b_piece.get_name() == "p":
+                    new_to = []
+                    for movs in to:
+                        p_at_point = piece_at_that_point(movs,whiteList,blackList)
+                        if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value:
+                            new_to.append(mov)
+                    to = np.array(new_to)
+                if to.size > 0:
+                    for mov in to:
+                        if len(mov.shape) == 2:
+                            mov = mov.reshape((2))
+                        if check_line(b_piece,p_pos,mov,whiteList,blackList):
+                            reduced_possible.append(b_piece)
+                            to_array.append([mov-b_piece.get_position()])
     if len(reduced_possible) == 0:
         return None,None
     piece_choosen = randomchooser(reduced_possible)
-    print(piece_choosen.get_name(), piece_choosen.get_position())
     piece_index = reduced_possible.index(piece_choosen)
     move_array = to_array[piece_index]
     mov_choosen = randomchooser(move_array) + piece_choosen.get_position()
     if len(mov_choosen.shape) == 2:
         mov_choosen = mov_choosen.reshape((2))
-    print(mov_choosen)
     return piece_choosen,mov_choosen 

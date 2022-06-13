@@ -241,7 +241,7 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
 def check(wking, bking, WhiteList ,BlackList, piece_return=False):
     for king in [wking,bking]:
         if king == None:
-            break
+            continue
         king_movs = king.get_info()[1]
         k_pos = king.get_position()
         for mov in king_movs:
@@ -251,9 +251,15 @@ def check(wking, bking, WhiteList ,BlackList, piece_return=False):
                 output = piece_at_that_point(each,WhiteList,BlackList)
                 if output != 0 and output.get_colour() != king.get_colour():
                     if ((mov == output.get_info()[1]).all(axis=1)).any() and output.get_name() != "p":
+                        if output.get_name() == "K" and np.where(each == mov_num) == 0:
+                            pass
+                        elif output.get_name() == "K" and np.where(each == mov_num) != 0:
+                            break
                         return king if not piece_return else output
                     elif output != 0  and output.get_name() == "p":
-                        if ((mov == output.get_info()[2]).all(axis=1)).any() and np.where(each == mov_num) == 1:
+                        index_array = (each == mov_num).all(axis=1).nonzero()        
+                                   
+                        if ((mov == output.get_info()[2]).all(axis=1)).any() and len(index_array) == 1 and index_array[0] == 0:
                             return king if not piece_return else output
                         else:
                             break
@@ -324,7 +330,7 @@ def check_mate(w_king,b_king, whitelist, blacklist):
 def get_attack_phile(king, all_possible,p_pos):
     choosen_dir = np.nonzero(((king.get_position() == all_possible).all(axis=2))*1)
     if choosen_dir[0].size == 0:
-        return False
+        return np.array([-1,-1])
     attacking_movs = all_possible[choosen_dir[0][0], 0:choosen_dir[1][0]]
     attacking_movs = np.append(attacking_movs,p_pos)
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
