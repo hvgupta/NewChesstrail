@@ -41,8 +41,10 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                 to_array.append(piece_array)
     else:
         all_movs,skip = valueDefiner(piece)
-        attacked_pos = get_attack_phile(b_king,all_movs,piece.get_position())
-        print((attacked_pos != np.array([-1,-1])).all())
+        if piece.get_name() !="p":
+            attacked_pos = get_attack_phile(b_king,all_movs,piece.get_position())
+        else:
+            attacked_pos = get_attack_phile(b_king,np.expand_dims(skip,axis=1),piece.get_position())
         if (attacked_pos != np.array([-1,-1])).all():
             for b_piece in blackList:
                 if b_piece.get_name() == "K":

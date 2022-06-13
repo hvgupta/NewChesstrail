@@ -22,9 +22,6 @@ def main():
 
     whiteKing = WhiteList[12]
     blackKing = BlackList[4]
-    HUMAN = Colour.w.value
-    AI = Colour.b.value
-    player_click_index = 0
     
     while running:
         
@@ -89,16 +86,20 @@ def main():
                                 sqSelected,player_click=reset(sqSelected,player_click)
                                 break
                             else:
-                                move_piece(selected_p,np.array(player_click[1]),c_board.board)
-                                if attacked_p != 0:
-                                    a_old = attacked_p.get_position()
-                                isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
-                                destroyed_p(attacked_p)
-                                if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
-                                    move_piece(selected_p,np.array(player_click[0]),c_board.board)
-                                    attacked_p.change_pos(a_old) if attacked_p != 0 else 0
-                                    sqSelected,player_click=reset(sqSelected,player_click)
-                                    break
+                                if check_line(selected_p,np.expand_dims(all_possible,axis=0),player_click[1],WhiteList,BlackList):
+                                    move_piece(selected_p,np.array(player_click[1]),c_board.board)
+                                    if attacked_p != 0:
+                                        a_old = attacked_p.get_position()
+                                    isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
+                                    destroyed_p(attacked_p)
+                                    if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
+                                        move_piece(selected_p,np.array(player_click[0]),c_board.board)
+                                        attacked_p.change_pos(a_old) if attacked_p != 0 else 0
+                                        sqSelected,player_click=reset(sqSelected,player_click)
+                                        break
+                                else:
+                                    sqSelected,player_click = reset(sqSelected,player_click)
+                                    continue
 
                         current_turn = current_turn*-1
 
@@ -124,7 +125,7 @@ def main():
         if len(player_click) == 1 and selected_p != 0 and selected_p.get_name() != "p":
             position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing])
         elif len(player_click) == 1 and selected_p != 0 and selected_p.get_name() == "p":
-            position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing],all_attack)
+            position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing],all_attack)
         c_m = False
         if w_check or isCheck == whiteKing:
             k_pos = whiteKing.get_position()

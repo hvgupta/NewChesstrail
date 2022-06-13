@@ -68,6 +68,7 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
                     continue
                 else:
                     draw(screen,surface,"c",pos)
+            
                     
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p" and other_condition:
                 old = selected_p.get_position()
@@ -86,6 +87,8 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
                     draw(screen,surface,"r",pos)
                 break
             elif output != 0 and output.get_colour() == selected_p.get_colour():
+                break
+            elif p_name == "p" and output != 0:
                 break
 
     if p_name == "p":
