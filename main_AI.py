@@ -100,15 +100,20 @@ def main():
                                 sqSelected,player_click=reset(sqSelected,player_click)
                                 break
                             else:
-                                move_piece(selected_p,np.array(player_click[1]),c_board.board)
-                                if attacked_p != 0:
-                                    a_old = attacked_p.get_position()
-                                destroyed_p(attacked_p)
-                                if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
-                                    move_piece(selected_p,np.array(player_click[0]),c_board.board)
-                                    attacked_p.change_pos(a_old) if attacked_p != 0 else 0
-                                    sqSelected,player_click=reset(sqSelected,player_click)
-                                    break
+                                if check_line(selected_p,np.expand_dims(all_possible,axis=0),player_click[1],WhiteList,BlackList):
+                                    move_piece(selected_p,np.array(player_click[1]),c_board.board)
+                                    if attacked_p != 0:
+                                        a_old = attacked_p.get_position()
+                                    isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
+                                    destroyed_p(attacked_p)
+                                    if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
+                                        move_piece(selected_p,np.array(player_click[0]),c_board.board)
+                                        attacked_p.change_pos(a_old) if attacked_p != 0 else 0
+                                        sqSelected,player_click=reset(sqSelected,player_click)
+                                        break
+                                else:
+                                    sqSelected,player_click = reset(sqSelected,player_click)
+                                    continue
 
                         current_turn = current_turn*-1
 
