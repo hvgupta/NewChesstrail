@@ -353,6 +353,10 @@ def move_to_attack_line(piece, attack_movs, p_pos_return=False):
         all_attack = np.expand_dims(all_attack,axis=1)
         t_table = ((all_attack-attack_movs) == 0).all(axis=3)
         to = all_attack[t_table.any(axis=0)]
+        t_table = ((p_movs-attack_movs[:-1]) == 0).all(axis=3)
+        to_extended = p_movs[t_table.any(axis=0)]
+        to = np.append(to,to_extended)
+        to = to.reshape((int(to.shape[0]/2),2))
         if p_pos_return:
             return to,all_attack
         else:

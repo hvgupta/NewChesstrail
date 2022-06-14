@@ -69,13 +69,21 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                         to_array.append(piece_array)   
                 to,p_pos = move_to_attack_line(b_piece,attacked_pos,True)
                 if b_piece.get_name() == "p":
-                    new_to = []
+                    there = False
+                    move_array = []
                     for movs in to:
                         p_at_point = piece_at_that_point(movs,whiteList,blackList)
                         if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value:
-                            new_to.append(mov)
-                    to = np.array(new_to)
-                if to.size > 0:
+                            move_array.append(movs-b_piece.get_position())
+                            there = True
+                        elif p_at_point == 0 and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == False:
+                            move_array.append(movs-b_piece.get_position())
+                            there = True
+                    if there:
+                        to_array.append(move_array)
+                        reduced_possible.append(b_piece)
+
+                if to.size > 0 and not b_piece.get_name() in ["K","p"]:
                     for mov in to:
                         if len(mov.shape) == 2:
                             mov = mov.reshape((2))
