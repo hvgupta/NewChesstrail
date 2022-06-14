@@ -60,7 +60,10 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                             piece.change_pos(a_old)
                         else:
                             moving_to = piece_at_that_point(movs,whiteList,blackList)
+                            old = b_piece.get_position()
+                            b_piece.change_pos(movs)
                             isCheck = check(None,b_king,whiteList,blackList)
+                            b_piece.change_pos(old)
                             if (moving_to == 0 or moving_to.get_colour() != Colour.b.value) and isCheck != b_king:
                                 there = True
                                 piece_array.append(movs-b_king.get_position())
@@ -73,7 +76,7 @@ def check_mov_chooser(w_king, b_king, whiteList, blackList):
                     move_array = []
                     for movs in to:
                         p_at_point = piece_at_that_point(movs,whiteList,blackList)
-                        if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value:
+                        if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == True:
                             move_array.append(movs-b_piece.get_position())
                             there = True
                         elif p_at_point == 0 and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == False:
