@@ -114,12 +114,11 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
         p_pos = selected_p.get_position()
         for pos in np.array([[0,-2],[0,2]]):
             new_pos = pos+p_pos
-            if pos[1] == -2:
-                output = check_line(selected_p,np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
-                if piece_at_that_point(new_pos+np.array([0,-1]),WhiteList,BlackList):
-                    output = False
-            else:
-                output = check_line(selected_p,np.array([[[0,1],[0,2]]])+p_pos,new_pos,WhiteList,BlackList)
+                # output = check_line(selected_p,np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
+                # if piece_at_that_point(new_pos+np.array([0,-1]),WhiteList,BlackList):
+                #     output = False
+                # if piece_at_that_point(np.array([7,0]),WhiteList,BlackList) != 
+            output = castle_checker(selected_p,new_pos,None,WhiteList,BlackList,True)
             if piece_at_that_point(new_pos,WhiteList,BlackList) == 0 and output:
                 surface = surface_creator()
                 draw(screen,surface,"c",new_pos)
@@ -200,7 +199,7 @@ def valueDefiner(piece):
         all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*np.arange(1,8).reshape(7,1)*p_colour
         return all_possible,None
     
-def castle_checker(king,to, board,Whitelist,Blacklist):
+def castle_checker(king,to, board,Whitelist,Blacklist,for_pos=False):
     if not king.get_castle():
         return king, board,0
     K_pos = king.get_position()
@@ -217,10 +216,10 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
     
     if there:
         if not piece.get_castle():
-            return king,board,0
+            return (king,board,0) if for_pos == False else False
 
         if dif < 0  and piece_at_that_point(to+np.array([0,-1]),Whitelist,Blacklist) != 0:
-            return king,board,0
+            return (king,board,0) if for_pos == False else False
         
         if dif<0:
             r_val = 3
@@ -228,18 +227,18 @@ def castle_checker(king,to, board,Whitelist,Blacklist):
         elif dif > 0:
             r_val = 5
             k_val = 6
+        if board != None:
+            piece.change_pos(np.array([R_pos[0],r_val]))
+            king.change_pos(np.array([K_pos[0],k_val]))
+            old = board[R_pos[0]][R_pos[1]]
+            board[R_pos[0]][R_pos[1]] = "--"
+            board[R_pos[0]][r_val] = old
+            old = board[K_pos[0]][K_pos[1]]
+            board[K_pos[0]][K_pos[1]] = "--"
+            board[K_pos[0]][k_val] = old
         
-        piece.change_pos(np.array([R_pos[0],r_val]))
-        king.change_pos(np.array([K_pos[0],k_val]))
-        old = board[R_pos[0]][R_pos[1]]
-        board[R_pos[0]][R_pos[1]] = "--"
-        board[R_pos[0]][r_val] = old
-        old = board[K_pos[0]][K_pos[1]]
-        board[K_pos[0]][K_pos[1]] = "--"
-        board[K_pos[0]][k_val] = old
-        
-        return king, board,piece
-    return king, board, 0
+        return (king,board,piece) if for_pos == False else True
+    return (king,board,0) if for_pos == False else False
 
 def check(wking, bking, WhiteList ,BlackList, piece_return=False):
     for king in [wking,bking]:
