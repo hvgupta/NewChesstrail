@@ -21,7 +21,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
     to_array = []
     if piece_checking == False:
         for b_piece in piece_list:
-            if (b_piece.get_position() == np.array([-1,-1])).all():
+            if (b_piece.get_position() == np.array([-100,-100])).all():
                 continue
             possible = False
             p_movs = b_piece.get_info()[1]
@@ -66,46 +66,70 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                         if (movs == piece_checking.get_position()).all():
                             a_old = piece_checking.get_position()
                             destroyed_p(piece_checking)
-                            moving_to = piece_at_that_point(movs,enemy_list,piece_list)
+                            isCheck = check(None,p_king,piece_list,enemy_list)
                             piece_checking.change_pos(a_old)
+                            if isCheck != p_king:
+                                there = True
+                                piece_array.append(movs-p_king.get_position())
                         else:
                             moving_to = piece_at_that_point(movs,enemy_list,piece_list)
+                            if moving_to != 0 and moving_to.get_colour() == p_king.get_colour():
+                                break
+                            k_attack_p = False
+                            if moving_to != 0  and moving_to.get_colour() != p_king.get_colour():
+                                a_old = moving_to.get_position()
+                                destroyed_p(moving_to)
+                                k_attack_p = True
                             old = b_piece.get_position()
                             b_piece.change_pos(movs)
                             isCheck = check(None,p_king,enemy_list,piece_list)
                             b_piece.change_pos(old)
-                            if (moving_to == 0 or moving_to.get_colour() != Colour.b.value) and isCheck != p_king:
+                            if k_attack_p:
+                                moving_to.change_pos(a_old)
+                                    
+                            if isCheck != p_king:
                                 there = True
                                 piece_array.append(movs-p_king.get_position())
                     if there:
                         reduced_possible.append(b_piece)
-                        to_array.append(piece_array)   
-                to,p_pos = move_to_attack_line(b_piece,attacked_pos,True)
-                if b_piece.get_name() == "p":
-                    there = False
-                    move_array = []
-                    for movs in to:
-                        p_at_point = piece_at_that_point(movs,enemy_list,piece_list)
-                        if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == True:
-                            move_array.append(movs-b_piece.get_position())
-                            there = True
-                        elif p_at_point == 0 and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == False:
-                            move_array.append(movs-b_piece.get_position())
-                            there = True
-                    if there:
-                        to_array.append(move_array)
-                        reduced_possible.append(b_piece)
-
-                if to.size > 0 and not b_piece.get_name() in ["K","p"]:
-                    for mov in to:
-                        if len(mov.shape) == 2:
-                            mov = mov.reshape((2))
-                        if check_line(b_piece,p_pos,mov,enemy_list,piece_list):
+                        to_array.append(piece_array)
+                else:   
+                    to,p_pos = move_to_attack_line(b_piece,attacked_pos,True)
+                    if b_piece.get_name() == "p":
+                        there = False
+                        move_array = []
+                        for movs in to:
+                            p_at_point = piece_at_that_point(movs,enemy_list,piece_list)
+                            if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == True:
+                                move_array.append(movs-b_piece.get_position())
+                                there = True
+                            elif p_at_point == 0 and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == False:
+                                move_array.append(movs-b_piece.get_position())
+                                there = True
+                        if there:
+                            to_array.append(move_array)
                             reduced_possible.append(b_piece)
-                            to_array.append([mov-b_piece.get_position()])
+
+                    elif to.size > 0:
+                        for mov in to:
+                            if len(mov.shape) == 2:
+                                mov = mov.reshape((2))
+                            if check_line(b_piece,p_pos,mov,enemy_list,piece_list):
+                                reduced_possible.append(b_piece)
+                                to_array.append([mov-b_piece.get_position()])
     if len(reduced_possible) == 0:
         return None,None
     return reduced_possible,to_array
 
-def position_eval(whiteList, BlackList):
-    pass
+def position_eval(whiteList,w_pos,BlackList,b_pos):
+    for piece_list in [[whiteList,w_pos],[BlackList,b_pos]]:
+        list_val = 0
+        for piece_index in range(piece_list[0]):
+            piece = piece_list[0][piece_index]
+            piece_movs = piece_list[1][piece_index]
+            for movs in piece_movs:
+                piece_val = piece_at_that_point(movs,whiteList,BlackList)
+                if piece_val != 0:
+                    list_val += piece_val.get_info()[0] 
+             
+        

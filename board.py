@@ -36,8 +36,3 @@ class Board():
                     blackList.append(Piece(piece_type,np.array((row,col)),colour))
                     
         return whiteList, blackList
-                
-                            
-                            
-                            
-                            

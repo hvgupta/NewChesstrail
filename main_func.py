@@ -338,6 +338,50 @@ def get_attack_phile(king, all_possible,p_pos):
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
     return attacking_movs
 
+def pawn_promotion(piece,screen,board,AI=False):
+    if piece == None or piece == 0:
+        return
+    p_pos = piece.get_position()
+    current_Colour = 0
+    if piece.get_name() == "p" and p_pos[0] in [0,7]:
+        current_Colour = 0
+        if piece.get_colour() == Colour.w.value:
+            current_Colour = Colour.w
+        elif piece.get_colour() == Colour.b.value:
+            current_Colour = Colour.b
+    if current_Colour != 0:
+        q_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}Q.png"),(SQ_SIZE,SQ_SIZE))
+        n_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}N.png"),(SQ_SIZE,SQ_SIZE))
+        if 7-p_pos[1] >= 3:
+            p.draw.rect(screen,(250,250,250),p.Rect((p_pos[1]+1)*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE*2,SQ_SIZE))
+            position_possible = p_pos + np.array([[0,1],[0,2]])
+        else:
+            p.draw.rect(screen,(250,250,250),p.Rect((p_pos[1]-2)*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE*2,SQ_SIZE))
+            position_possible = p_pos + np.array([[0,-1],[0,-2]])
+        running = True
+        screen.blit(q_piece, p.Rect(position_possible[0,1]*SQ_SIZE,position_possible[0,0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+        screen.blit(n_piece, p.Rect(position_possible[1,1]*SQ_SIZE,position_possible[1,0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+        p.display.update()
+        while running:
+            for e in p.event.get():
+                if e.type == p.MOUSEBUTTONDOWN:
+                    mouse_pos = p.mouse.get_pos()
+                    col = mouse_pos[0]//SQ_SIZE
+                    row = mouse_pos[1]//SQ_SIZE
+                    index = np.where((position_possible == (row,col)).all(axis=1) == True)[0][0]
+                    if index:
+                        piece.change_type(type.N)
+                        screen.blit(n_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+                        board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}N"
+                        running = False
+                        break
+                    else:
+                        piece.change_type(type.Q) 
+                        screen.blit(q_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+                        board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}Q"
+                        running = False
+                        break
+
 def move_to_attack_line(piece, attack_movs, p_pos_return=False):
     p_movs,all_attack = valueDefiner(piece)
     attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])

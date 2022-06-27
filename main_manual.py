@@ -22,7 +22,7 @@ def main():
 
     whiteKing = WhiteList[12]
     blackKing = BlackList[4]
-    
+    selected_p = None
     while running:
         
         for e in p.event.get():
@@ -126,6 +126,8 @@ def main():
             position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing])
         elif len(player_click) == 1 and selected_p != 0 and selected_p.get_name() == "p":
             position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing],all_attack)
+        p.display.update()
+        pawn_promotion(selected_p,screen,c_board.board)
         c_m = False
         if w_check or isCheck == whiteKing:
             k_pos = whiteKing.get_position()

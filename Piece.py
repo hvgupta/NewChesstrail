@@ -29,6 +29,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     
     def change_type(self,new_type):
         self.piece_type = new_type
+        self.name = new_type.name
         
     def get_castle(self):
         return self.castle
@@ -36,3 +37,4 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def change_castle(self):
         if self.name in ["K","R"]:
             self.castle = False
+            
