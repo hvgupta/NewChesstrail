@@ -1,6 +1,9 @@
 import random
 from main_func import *
-    
+from stockfish import Stockfish
+from board import *
+
+stockfish = Stockfish(r'V:\Harsh\Python\Chess\NewChesstrail\stockfish-11-win\Windows\stockfish_20011801_x64', depth=18, parameters={"Threads": 2, "Minimum Thinking Time": 30})
 
 def randomchooser(blacklist):
     return random.choice(blacklist)
@@ -31,19 +34,25 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                 if np.max(movs+p_pos)>7 or np.min(movs+p_pos)<0:
                     continue
                 output = piece_at_that_point(movs+p_pos,enemy_list,piece_list)
-                if (output == 0 or output.get_colour() == Colour.w.value) and b_piece.get_name() != "p":
+                b_piece.change_pos(movs+p_pos)
+                returned = check(None,p_king,enemy_list,piece_list)
+                b_piece.change_pos(p_pos)
+                if (output == 0 or output.get_colour() == Colour.w.value) and b_piece.get_name() != "p" and returned == False:
                     possible = True
                     piece_array.append(movs)
-                elif b_piece.get_name() == "p" and output == 0:
+                elif b_piece.get_name() == "p" and output == 0 and returned == False:
                     possible = True
                     piece_array.append(movs)
             if b_piece.get_name() == "p":
                 p_attacks = b_piece.get_info()[2]
                 for atts in p_attacks:
-                    if np.max(movs+p_pos)>7 or np.min(movs+p_pos)<0:
+                    if np.max(atts+p_pos)>7 or np.min(atts+p_pos)<0:
                         break
                     output = piece_at_that_point(atts+p_pos,enemy_list,piece_list)
-                    if output != 0:
+                    b_piece.change_pos(atts+p_pos)
+                    returned = check(None,p_king,enemy_list,piece_list)
+                    b_piece.change_pos(p_pos)
+                    if output != 0 and returned == False:
                         possible = True
                         piece_array.append(atts)
             if possible:
@@ -55,7 +64,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
             attacked_pos = get_attack_phile(p_king,all_movs,piece_checking.get_position())
         else:
             attacked_pos = get_attack_phile(p_king,np.expand_dims(skip,axis=1),piece_checking.get_position())
-        if (attacked_pos != np.array([-1,-1])).all():
+        if (attacked_pos != np.array([-100,-100])).all():
             for b_piece in piece_list:
                 if b_piece.get_name() == "K":
                     there = False
@@ -120,16 +129,37 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
     if len(reduced_possible) == 0:
         return None,None
     return reduced_possible,to_array
-
-def position_eval(whiteList,w_pos,BlackList,b_pos):
-    for piece_list in [[whiteList,w_pos],[BlackList,b_pos]]:
-        list_val = 0
-        for piece_index in range(piece_list[0]):
-            piece = piece_list[0][piece_index]
-            piece_movs = piece_list[1][piece_index]
-            for movs in piece_movs:
-                piece_val = piece_at_that_point(movs,whiteList,BlackList)
-                if piece_val != 0:
-                    list_val += piece_val.get_info()[0] 
              
-        
+def board2fen(board, w_castle, b_castle):
+    empty = 0
+    fen = ""
+    for row in board:
+        for column in row:
+            if column[0] == Colour.b.name:
+                if empty != 0:
+                    fen = fen + str(empty)
+                    empty = 0
+                fen = fen + column[1].lower()
+            elif column[0] == Colour.w.name:
+                if empty != 0:
+                    fen = fen + str(empty)
+                    empty = 0
+                fen = fen + column[1].upper()
+            elif column == '--':
+                empty += 1
+        if empty != 0:
+            fen = fen + str(empty)
+            empty = 0
+        fen = fen + "/"
+    fen = fen[:-1] + " b {castle} - 1 1" .format(castle= w_castle+b_castle)
+    
+    return fen
+
+def fen2move(fen):
+    stockfish.set_fen_position(fen)
+    move = stockfish.get_best_move()
+    return move
+
+c_board = Board()
+fen_string = board2fen(c_board.board, "","")
+print(fen2move(fen_string))

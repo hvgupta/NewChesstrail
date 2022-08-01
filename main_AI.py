@@ -49,6 +49,9 @@ def main():
                         player_click.append(sqSelected)
             
         elif current_turn == AI:
+            fen = board2fen(c_board.board,"KQ","kq")
+            print(fen)
+            # print(fen2move(fen))
             if count > 1:
                 num = 5
             if player_click_index == 0:
@@ -133,7 +136,7 @@ def main():
                         attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
                         if attacked_p != 0 and current_turn != attacked_p.get_colour():
                             move_piece(selected_p,np.array(player_click[1]),c_board.board)
-                            attacked_p.change_pos(np.array([-1,-1]))
+                            destroyed_p(attacked_p)
                             current_turn = current_turn*-1
                                 
                 sqSelected,player_click=reset(sqSelected,player_click)
