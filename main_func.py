@@ -290,9 +290,16 @@ def check_mate(w_king,b_king, whitelist, blacklist):
             for pos in new_pos:
                 if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all():
                     continue
-                if piece_at_that_point(pos,whitelist,blacklist) == 0:
+                piece = piece_at_that_point(pos,whitelist,blacklist)
+                if piece == 0:
                     king.change_pos(pos[0])
                     output = check(king,None,whitelist,blacklist)
+                elif piece.get_colour() != king.get_colour():
+                    p_pos = piece.get_position()
+                    destroyed_p(piece)
+                    king.change_pos(p_pos)
+                    output = check(king,None,whitelist,blacklist)
+                    piece.change_pos(p_pos)
                 else:
                     output = None
                 output_arr.append(output)
@@ -312,13 +319,13 @@ def check_mate(w_king,b_king, whitelist, blacklist):
         attacking_p_movs,skip = valueDefiner(attacking_p)
         attacking_phile = get_attack_phile(check_array[0],attacking_p_movs,attacking_p.get_position())
         if attacking_phile.any() == False:
-            return w_check_m,b_check_m
+            return False,False
         for piece in correct_self_list[0]:
             to,piece_movs = move_to_attack_line(piece,attacking_phile,True)
             if to.size > 0:
                 for movs in to:
                     if check_line(piece,piece_movs,movs,whitelist,blacklist):
-                        if piece.get_name() == "K" and not (movs == attacking_p.get_position()).all():
+                        if piece.get_name() == "K":
                             break
                         if check_array[0] == w_king:
                             w_check_m = False

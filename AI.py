@@ -6,11 +6,15 @@ from board import *
 stockfish = Stockfish(r'V:\Harsh\Python\Chess\NewChesstrail\stockfish-11-win\Windows\stockfish_20011801_x64', depth=18, parameters={"Threads": 2, "Minimum Thinking Time": 30})
 
 def randomchooser(blacklist):
+    if blacklist == None:
+        return None
     return random.choice(blacklist)
     
 def check_mov_chooser(w_king, b_king, whiteList, blackList):
     piece = check(w_king,b_king,whiteList,blackList,True)
     reduced_possible, to_array = possible_movs_array(piece,blackList,whiteList,b_king)
+    if reduced_possible ==None:
+        return None,None
     piece_choosen = randomchooser(reduced_possible)
     piece_index = reduced_possible.index(piece_choosen)
     move_array = to_array[piece_index]
@@ -74,8 +78,11 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                     for movs in bK_movs:
                         if (movs == piece_checking.get_position()).all():
                             a_old = piece_checking.get_position()
+                            k_pos = p_king.get_position()
                             destroyed_p(piece_checking)
+                            p_king.change_pos(movs)
                             isCheck = check(None,p_king,piece_list,enemy_list)
+                            p_king.change_pos(k_pos)
                             piece_checking.change_pos(a_old)
                             if isCheck != p_king:
                                 there = True
@@ -83,7 +90,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                         else:
                             moving_to = piece_at_that_point(movs,enemy_list,piece_list)
                             if moving_to != 0 and moving_to.get_colour() == p_king.get_colour():
-                                break
+                                continue
                             k_attack_p = False
                             if moving_to != 0  and moving_to.get_colour() != p_king.get_colour():
                                 a_old = moving_to.get_position()
@@ -127,7 +134,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                                 reduced_possible.append(b_piece)
                                 to_array.append([mov-b_piece.get_position()])
     if len(reduced_possible) == 0:
-        possible_movs_array(piece_checking,piece_list,enemy_list,p_king)
+        # possible_movs_array(piece_checking,piece_list,enemy_list,p_king)
         return None,None
     return reduced_possible,to_array
              

@@ -56,7 +56,10 @@ def main():
                 num = 5
             if player_click_index == 0:
                 selected_p,p_move = check_mov_chooser(whiteKing,blackKing,WhiteList,BlackList)
-                print(selected_p.get_name(),selected_p.get_position(),p_move)
+                try:
+                    print(selected_p.get_name(),selected_p.get_position(),p_move)
+                except:
+                    pass
                 if selected_p != None:
                     all_possible,all_attack = valueDefiner(selected_p)
                     player_click.append(tuple(selected_p.get_position()))
