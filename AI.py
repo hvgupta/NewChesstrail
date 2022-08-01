@@ -127,6 +127,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                                 reduced_possible.append(b_piece)
                                 to_array.append([mov-b_piece.get_position()])
     if len(reduced_possible) == 0:
+        possible_movs_array(piece_checking,piece_list,enemy_list,p_king)
         return None,None
     return reduced_possible,to_array
              

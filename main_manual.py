@@ -78,7 +78,7 @@ def main():
                                 move_piece(selected_p,np.array(player_click[0]),c_board.board)
                                 attacked_p.change_pos(a_old) if attacked_p != 0 else 0
                                 sqSelected,player_click=reset(sqSelected,player_click)
-                                break
+                                continue
                             
                             selected_p.change_castle()
                         else:
