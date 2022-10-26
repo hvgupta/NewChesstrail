@@ -411,3 +411,22 @@ def move_to_attack_line(piece, attack_movs, p_pos_return=False):
             return to,all_attack
         else:
             return to
+
+def game_end(case):
+    game_end_surface = surface_creator(100)
+    image_to_display = ''
+    if case == 0:
+        image_to_display = p.image.load("chess_pngs/draw.png")
+    elif case == 1:
+        image_to_display = p.image.load("chess_pngs/White.png")
+    elif case == 2:
+        image_to_display = p.image.load("chess_pngs/Black.png")
+    
+    game_end_surface.blit(image_to_display,p.Rect(4*SQ_SIZE,0,5*SQ_SIZE,5*SQ_SIZE))
+    while True:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                p.quit()
+            elif e.type == p.MOUSEBUTTONDOWN:
+                p.quit()
+    

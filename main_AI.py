@@ -2,7 +2,6 @@ import pygame as p
 from board import *
 from AI import *
 
-
 def main():
     
     p.init()
@@ -64,6 +63,8 @@ def main():
                     all_possible,all_attack = valueDefiner(selected_p)
                     player_click.append(tuple(selected_p.get_position()))
                     player_click.append(tuple(p_move))
+                else:
+                    game_end(0)
                 
         if len(player_click) == 1:
             
@@ -162,8 +163,11 @@ def main():
         if c_m:
             screen.blit(p.transform.scale(p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
             
-        if w_check or b_check:
-            running = False
+        if w_check:
+            game_end(-1)
+        elif b_check:
+            game_end(1)
+
         clock.tick(15)
         p.display.flip()
 

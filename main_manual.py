@@ -3,40 +3,47 @@ from board import *
 from main_func import *
         
 def main():
-    
+    # initialising pygame ...
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
+    
+    #creating the chess board array
     c_board = Board()
     WhiteList, BlackList = c_board.initialise(c_board.board)
+    
+    #inseting images on to the pygame window 
     loadImages()
+    
+    #declaring variables for later use
     running = True
     current_turn = Colour.w.value
     sqSelected = ()
     player_click = []
+    whiteKing = WhiteList[12]
+    blackKing = BlackList[4]
+    selected_p = None
+    
     def reset(sqSelected,player_click): # resets the sqSelected and player_click
         sqSelected = ()
         player_click = []
         return sqSelected,player_click
 
-    whiteKing = WhiteList[12]
-    blackKing = BlackList[4]
-    selected_p = None
-    while running:
+    while running: # the main function
         
         for e in p.event.get():
             
             if e.type == p.QUIT:
                 running = False
             
-            elif e.type == p.MOUSEBUTTONDOWN :
+            elif e.type == p.MOUSEBUTTONDOWN:
                 
                 p.display.update()
-                location = p.mouse.get_pos()
+                location = p.mouse.get_pos() #get the coordinate of the mouse click
                 col = location[0]//SQ_SIZE
                 row = location[1]//SQ_SIZE
-                if sqSelected == (row,col):
+                if sqSelected == (row,col): #checks if the same box is clicked twice, if yes then it resets the position storers
                     sqSelected,player_click=reset(sqSelected,player_click)
                 else:   
                     sqSelected = (row,col)
@@ -44,7 +51,7 @@ def main():
                 
         if len(player_click) == 1:
             
-            selected_p = piece_at_that_point(player_click[0],WhiteList,BlackList)
+            selected_p = piece_at_that_point(player_click[0],WhiteList,BlackList) 
             
             if selected_p == 0 or selected_p.get_colour() != current_turn:
                 sqSelected,player_click=reset(sqSelected,player_click)
