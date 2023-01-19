@@ -114,10 +114,6 @@ def position_shower(all_possible, WhiteList, BlackList, screen, selected_p,king_
         p_pos = selected_p.get_position()
         for pos in np.array([[0,-2],[0,2]]):
             new_pos = pos+p_pos
-                # output = check_line(selected_p,np.array([[[0,-1],[0,-2]]])+p_pos,new_pos,WhiteList,BlackList)
-                # if piece_at_that_point(new_pos+np.array([0,-1]),WhiteList,BlackList):
-                #     output = False
-                # if piece_at_that_point(np.array([7,0]),WhiteList,BlackList) != 
             output = castle_checker(selected_p,new_pos,None,WhiteList,BlackList,True)
             if piece_at_that_point(new_pos,WhiteList,BlackList) == 0 and output:
                 surface = surface_creator()
@@ -164,8 +160,11 @@ def check_line(selected_p,all_possible, to,w_list,b_list):
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1)
     if choosen_dir[0].size == 0:
         return False
-    for pos in all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]:
+    line = all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]
+    for pos in line:
         output = piece_at_that_point(list(pos),w_list,b_list)
+        if output != 0 and selected_p == output:
+            continue
         if output != 0 and selected_p.get_colour() == output.get_colour():
             return False
         elif output != 0 and selected_p.get_colour() != output.get_colour() and not (to == output.get_position()).all(axis=0):
