@@ -6,10 +6,9 @@ def main():
     
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
-    clock = p.time.Clock()
     screen.fill(p.Color("white"))
     c_board = Board()
-    WhiteList, BlackList = c_board.initialise(c_board.board)
+    White_pList, Black_pList = c_board.initialise(c_board.board)
     loadImages()
     running = True
     current_turn = Colour.w.value
@@ -20,12 +19,12 @@ def main():
         player_click = []
         return sqSelected,player_click
 
-    whiteKing = WhiteList[12]
-    blackKing = BlackList[4]
+    whiteKing = White_pList[12]
+    blackKing = Black_pList[4]
     HUMAN = Colour.w.value
     AI = Colour.b.value
     player_click_index = 0
-    count = 0
+    selected_p = Piece
     
     while running:
         
@@ -52,7 +51,7 @@ def main():
             print(fen)
             # print(fen2move(fen))
             if player_click_index == 0:
-                selected_p,p_move = check_mov_chooser(whiteKing,blackKing,WhiteList,BlackList)
+                selected_p,p_move = check_mov_chooser(whiteKing,blackKing,White_pList,Black_pList)
                 try:
                     print(selected_p.get_name(),selected_p.get_position(),p_move)
                 except:
@@ -65,12 +64,12 @@ def main():
                     game_end(0)
 
         gameState(screen,c_board.board)
-        isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
-        w_check,b_check = check_mate(whiteKing,blackKing,WhiteList,BlackList)
+        isCheck = check(whiteKing,blackKing,White_pList,Black_pList)
+        w_checkMated,b_checkMated = check_mate(whiteKing,blackKing,White_pList,Black_pList)
                 
         if len(player_click) == 1:
             
-            selected_p = piece_at_that_point(player_click[0],WhiteList,BlackList) 
+            selected_p = piece_at_that_pos(player_click[0],White_pList,Black_pList) 
             if selected_p == 0 or selected_p.get_colour() != current_turn:
                 sqSelected,player_click=reset(sqSelected,player_click)
                 continue
@@ -78,85 +77,84 @@ def main():
             all_possible, all_attack = valueDefiner(selected_p)
             
             if selected_p != 0 and selected_p.get_name() != "p":
-                position_shower(all_possible,WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing])
+                position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing])
             elif selected_p != 0 and selected_p.get_name() == "p":
-                position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),WhiteList,BlackList,screen,selected_p,[whiteKing,blackKing],all_attack)
+                position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing],all_attack)
         
         elif len(player_click) == 2:
 
-            attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
+            attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList)
             
             condition = not (attacked_p != 0  and attacked_p.get_colour() == selected_p.get_colour())
                     
-            if condition and selected_p != 0:
-                p_info = selected_p.get_info()
-                p_name = selected_p.get_name()
-                    
-                if ((all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)] == player_click[1]).all(axis=1)).any():
-                    output = None
-                    if p_name != "p":
-                        output = check_line(selected_p,all_possible,player_click[1],WhiteList,BlackList)
-                    else:
-                        if attacked_p != 0:
-                            sqSelected,player_click=reset(sqSelected,player_click)
-                            break
-                        output = check_line(selected_p,np.expand_dims(all_possible,axis=0),player_click[1],WhiteList,BlackList)
-                    
-                    if not output:
-                        sqSelected, player_click = reset(sqSelected,player_click)
-                        continue
-                    
-                    all_possible = all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)]    
-
-                    if attacked_p == 0:
-                        move_piece(selected_p, np.array(player_click[1]),c_board.board)
-                        isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
-                        if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
-                            move_piece(selected_p,np.array(player_click[0]),c_board.board)
-                            sqSelected,player_click = reset(sqSelected,player_click)
-                            continue
-                    elif attacked_p != 0:
-                        move_piece(selected_p,np.array(player_click[0]),c_board.board)
-                        a_old = attacked_p.get_position()
-                        destroyed_p(attacked_p)
-                        isCheck = check(whiteKing,blackKing,WhiteList,BlackList)
-                        if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
-                            move_piece(selected_p,np.array(player_click[0]),c_board.board)
-                            attacked_p.position = a_old
-                            sqSelected,player_click = reset(sqSelected,player_click)
-                            continue
-                        
-                    selected_p.change_castle()
-
-                    current_turn = current_turn*-1
-
-                elif p_name == "K" and attacked_p == 0:
-                    selected_p,c_board.board,attacked_p = castle_checker(selected_p,player_click[1],c_board.board,WhiteList,BlackList)
-                    if attacked_p != 0:
-                        selected_p.change_castle()
-                        attacked_p.change_castle()
-                        current_turn = current_turn*-1
-                    
-                elif p_info == getattr(type,"p").value and player_click[1] in all_attack:
-                    attacked_p = piece_at_that_point(player_click[1],WhiteList,BlackList)
-                    if attacked_p != 0 and current_turn != attacked_p.get_colour():
-                        move_piece(selected_p,np.array(player_click[1]),c_board.board)
-                        attacked_p.change_pos(np.array([-1,-1]))
-                        current_turn = current_turn*-1
-                            
-            sqSelected,player_click=reset(sqSelected,player_click)
-
-        # pawn_promotion(selected_p,screen,c_board.board)
-        
-        if w_check or isCheck == whiteKing:
-            k_pos = whiteKing.get_position()
-            screen.blit(
-                p.transform.scale(
-                    p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE)
+            if not condition:
+                moves = []
+                sqSelected,player_click = reset(sqSelected,player_click)
+                continue
+            p_name = selected_p.get_name()
+                
+            conditions = (
+                (((all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)] == player_click[1]).all(axis=1)).any())
+                or
+                (
+                    p_name == "p" and ((all_attack[(np.max(all_attack,axis=1) < 8) & (np.min(all_attack,axis=1)>-1)] == player_click[1]).all(axis=1)).any()
+                    and
+                    (attacked_p != 0 and attacked_p.get_colour() != selected_p.get_colour())
+                    )
                 )
+                    
+            if not conditions:
+                moves = []
+                sqSelected,player_click = reset(sqSelected,player_click)
+                continue
             
-        elif b_check or isCheck == blackKing:
-            k_pos = blackKing.get_position()
+            output = None
+            if p_name != "p":
+                output = check_line(selected_p,all_possible,player_click[1],White_pList,Black_pList)
+            else:
+                output = check_line(selected_p,np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0),player_click[1],White_pList,Black_pList)
+            
+            if not output:
+                sqSelected, player_click = reset(sqSelected,player_click) #check if the move is blocked by any other piece
+                continue
+            
+            if selected_p.get_name() == "K" and abs(player_click[1][1] - player_click[0][1]) == 2:
+                castle_valid = castle_checker(selected_p, np.array(player_click[1]),White_pList,Black_pList)
+                if not castle_valid:
+                    continue
+                rook_xcoord = 0 if player_click[1][1] - player_click[0][1] == -2 else 7
+                rook = piece_at_that_pos(np.array([player_click[1][0],rook_xcoord]),White_pList,Black_pList)
+                rook_old_pos = rook.get_position()
+                rook_to_pos = np.array([player_click[1][0],3]) if player_click[1][1] - player_click[0][1] == -2 else np.array([player_click[1][0],5])
+                c_board.move_piece(selected_p,np.array(np.array(player_click[1])))
+                c_board.move_piece(rook,rook_to_pos)
+                moves.append([selected_p, player_click[0]])
+                moves.append([rook, rook_old_pos])
+
+            elif attacked_p == 0:
+                c_board.move_piece(selected_p, np.array(sqSelected))
+                moves.append([selected_p,player_click[0]])
+
+            elif attacked_p != 0:
+                c_board.move_piece(selected_p,np.array(sqSelected))
+                destroyed_p(attacked_p)
+                moves.append([selected_p,player_click[0]])
+                moves.append([attacked_p, player_click[1]])
+            
+            isCheck = check(whiteKing,blackKing,White_pList,Black_pList)  
+            if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
+                for move in moves:
+                    c_board.move_piece(move[0],np.array(move[1]))
+            else:
+                # pawn_promotion(selected_p,screen,c_board.board)
+                selected_p.change_castle()
+                current_turn *= -1
+            
+            moves = []
+            sqSelected,player_click = reset(sqSelected,player_click)
+        
+        if isCheck != False:
+            k_pos = isCheck.get_position()
             screen.blit(
                 p.transform.scale(
                     p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE)
@@ -164,15 +162,11 @@ def main():
         
         p.display.update()
             
-        if w_check:
-            game_end(-1)
-        elif b_check:
-            game_end(1)
-
-        clock.tick(15)
-        p.display.flip()
-
+        if w_checkMated or b_checkMated:
+            running = False
+            continue
         
+        p.display.flip()
 
 if __name__ == "__main__":    
     main()

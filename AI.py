@@ -37,7 +37,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
             for movs in p_movs:
                 if np.max(movs+p_pos)>7 or np.min(movs+p_pos)<0:
                     continue
-                output = piece_at_that_point(movs+p_pos,enemy_list,piece_list)
+                output = piece_at_that_pos(movs+p_pos,enemy_list,piece_list)
                 b_piece.change_pos(movs+p_pos)
                 returned = check(None,p_king,enemy_list,piece_list)
                 b_piece.change_pos(p_pos)
@@ -52,7 +52,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                 for atts in p_attacks:
                     if np.max(atts+p_pos)>7 or np.min(atts+p_pos)<0:
                         break
-                    output = piece_at_that_point(atts+p_pos,enemy_list,piece_list)
+                    output = piece_at_that_pos(atts+p_pos,enemy_list,piece_list)
                     b_piece.change_pos(atts+p_pos)
                     returned = check(None,p_king,enemy_list,piece_list)
                     b_piece.change_pos(p_pos)
@@ -88,7 +88,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                                 there = True
                                 piece_array.append(movs-p_king.get_position())
                         else:
-                            moving_to = piece_at_that_point(movs,enemy_list,piece_list)
+                            moving_to = piece_at_that_pos(movs,enemy_list,piece_list)
                             if moving_to != 0 and moving_to.get_colour() == p_king.get_colour():
                                 continue
                             k_attack_p = False
@@ -115,7 +115,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                         there = False
                         move_array = []
                         for movs in to:
-                            p_at_point = piece_at_that_point(movs,enemy_list,piece_list)
+                            p_at_point = piece_at_that_pos(movs,enemy_list,piece_list)
                             if p_at_point != 0  and p_at_point.get_colour() == Colour.w.value and ((movs-b_piece.get_position() - b_piece.get_info()[2] == 0).all(axis=1).any()) == True:
                                 move_array.append(movs-b_piece.get_position())
                                 there = True

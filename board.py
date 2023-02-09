@@ -18,6 +18,12 @@ class Board():
             ]
         self.Turn = Colour.w
     
+    def move_piece(self,piece: Piece,to: list):
+        old_pos = piece.get_position()
+        piece.change_pos(to)
+        old = self.board[old_pos[0]][old_pos[1]]
+        self.board[to[0]][to[1]] = old
+        self.board[old_pos[0]][old_pos[1]] = "--"
     
     @staticmethod    # I thought a list of objects would be cool, so here it is 
     def initialise(board): 
