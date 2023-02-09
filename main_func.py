@@ -428,4 +428,3 @@ def game_end(case):
                 p.quit()
             elif e.type == p.MOUSEBUTTONDOWN:
                 p.quit()
-    
