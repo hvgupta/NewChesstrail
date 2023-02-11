@@ -1,6 +1,7 @@
 import numpy as np
 from Piece import *
 import pygame as p
+import copy
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -36,18 +37,19 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
     condition = True
     surface = surface_creator(50)
     draw(screen,surface,"p",selected_p.get_position())
-    
-    if isCheck != False and selected_p.get_name() != "K":
+    attacking_p_movs = []
+    if isCheck != False:
         checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
         if isCheck.get_name() != "p":
             attacking_p_movs,skip = valueDefiner(isCheck)
+            choosen_dir = np.nonzero(((checked_colour.get_position() == attacking_p_movs).all(axis=2))*1)
+            attacking_p_movs = attacking_p_movs[choosen_dir[0][0],0:choosen_dir[1][0]]
+            attacking_p_movs = np.append(attacking_p_movs,isCheck.get_position())
+            attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
         else:
-            p_movs, attacking_p_movs = valueDefiner(isCheck)
-            attacking_p_movs = np.expand_dims(attacking_p_movs,axis=1)
-        choosen_dir = np.nonzero(((checked_colour.get_position() == attacking_p_movs).all(axis=2))*1)
-        attacking_p_movs = attacking_p_movs[choosen_dir[0][0],0:choosen_dir[1][0]+1]
-        attacking_p_movs = np.append(attacking_p_movs,isCheck.get_position())
-        attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
+            attacking_p_movs = np.expand_dims(copy.deepcopy(isCheck.get_position()),axis=0)
+            # attacking_p_movs = np.append(attacking_p_movs,np.array(checked_colour.get_position())).reshape((2,2))
+            
     
     for turn_set in all_possible: 
 
@@ -57,11 +59,10 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 break
             surface = surface_creator()
             output = piece_at_that_pos(pos,White_pList,Black_pList)
-            if isCheck != False and selected_p.get_name() != "K":
+            if isCheck != False and not isCheck.get_name() == 'p':
                 condition = ((attacking_p_movs == pos).all(axis=1)).any()
-            
-            if not condition:
-                continue
+                if not condition:
+                    continue
 
             old = selected_p.get_position()
             selected_p.change_pos(pos)
@@ -69,9 +70,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             
             if output == 0:
                 Check = check(king_array[0],king_array[1],White_pList,Black_pList)
-                if Check != False and Check.get_colour() == selected_p.get_colour():
-                    continue
-                else:
+                if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"c",pos)
             
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
@@ -80,9 +79,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 Check = check(king_array[0],king_array[1],White_pList,Black_pList)
                 if isCheck != False:
                     isCheck.change_pos(pos)
-                if Check != False and Check.get_colour() == selected_p.get_colour():
-                    continue
-                else:
+                if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"r",pos)
                 end_of_Phile = True
                 
@@ -256,11 +253,13 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
                             pass
                         elif output.get_name() == "K" and np.where(each == mov_num) != 0:
                             break
+                        king.change_pos(k_pos)
                         return king if not attacking_p_return else output
                     elif output != 0  and output.get_name() == "p":
                         index_array = (each == mov_num).all(axis=1).nonzero()        
                                    
-                        if ((mov == output.get_info()[2]).all(axis=1)).any() and len(index_array) == 1 and index_array[0] == 0:
+                        if ((np.array([abs(mov[0]),mov[1]]) == output.get_info()[2]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
+                            king.change_pos(k_pos)
                             return king if not attacking_p_return else output
                         else:
                             break
@@ -273,6 +272,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
         for movs in K_horse_check:
             output = piece_at_that_pos(movs,White_pList,Black_pList)
             if output != 0  and output.get_info() == type.N.value and output.get_colour() != king.get_colour():
+                king.change_pos(k_pos)
                 return king if not attacking_p_return else output
             
     return False

@@ -18,10 +18,10 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def get_points(self) -> int:
         return self.piece_type.value[1]
     
-    def get_position(self) -> np.array:
+    def get_position(self):
         return self.position
     
-    def change_pos(self,new_pos) -> np.array:
+    def change_pos(self,new_pos):
         self.position = new_pos
     
     def get_name(self) -> str:
