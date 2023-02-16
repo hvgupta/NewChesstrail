@@ -63,7 +63,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 if selected_p.get_name() != 'K':
                     condition = ((attacking_p_movs == pos).all(axis=1)).any()
                 else:
-                    condition = (isCheck.get_position() == pos).all() or ((attacking_p_movs[:-1] != pos).all(axis=1)).any()
+                    condition = (isCheck.get_position() == pos).all() or ((attacking_p_movs != pos).all(axis=1)).any()
                 if not condition:
                     continue
 

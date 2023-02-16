@@ -134,7 +134,7 @@ def main():
             if isCheck != False and isCheck.get_colour() == selected_p.get_colour(): #if yes, then the moves are undone
                 for move in PastMoves:
                     c_board.move_piece(move[0],np.array(move[1]))
-            else: #else piece is allowed to and the turn is given to the oppsote side
+            else: #else piece is allowed to and the turn is given to the opposite side
                 gameState(screen,c_board.board)
                 selected_p.change_castle()
                 current_turn *= -1
