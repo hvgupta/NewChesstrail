@@ -48,9 +48,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
         else:
             attacking_p_movs = np.expand_dims(copy.deepcopy(isCheck.get_position()),axis=0)
-            # attacking_p_movs = np.append(attacking_p_movs,np.array(checked_colour.get_position())).reshape((2,2))
-            
-    
+        
     for turn_set in all_possible: 
 
         for pos in turn_set:
@@ -59,8 +57,12 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 break
             surface = surface_creator()
             output = piece_at_that_pos(pos,White_pList,Black_pList)
-            if isCheck != False and not isCheck.get_name() == 'p':
-                condition = ((attacking_p_movs == pos).all(axis=1)).any()
+            if isCheck != False:
+                condition = False
+                if selected_p.get_name() != 'K':
+                    condition = ((attacking_p_movs == pos).all(axis=1)).any()
+                else:
+                    condition = (isCheck.get_position() == pos).all() or ((attacking_p_movs[:-1] != pos).all(axis=1)).any()
                 if not condition:
                     continue
 
@@ -110,7 +112,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
     
     if selected_p.get_name() == "K" and selected_p.get_castle():
         p_pos = selected_p.get_position()
-        for pos in np.array([[0,-2],[0,2]]):
+        for pos in PieceType.K.value[2]:
             new_pos = pos+p_pos
             output = castle_checker(selected_p,new_pos,White_pList,Black_pList)
             if output:
@@ -201,7 +203,7 @@ def valueDefiner(piece, pawn = False):
         if piece.get_castle():
             all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
         else:
-            all_possible = p_pos + np.expand_dims(p_info[1][:-2],axis=1)*p_colour
+            all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
         return all_possible,None
     
     else:
@@ -271,11 +273,11 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
                         break
                 elif output !=0 and output.get_colour() == king.get_colour():
                     break
-        K_horse_check = type.N.value[1]+k_pos
+        K_horse_check = PieceType.N.value[1]+k_pos
         K_horse_check = K_horse_check[(np.max(K_horse_check,axis=1)<8) & (np.min(K_horse_check,axis=1)>-1)]
         for movs in K_horse_check:
             output = piece_at_that_pos(movs,White_pList,Black_pList)
-            if output != 0  and output.get_info() == type.N.value and output.get_colour() != king.get_colour():
+            if output != 0  and output.get_info() == PieceType.N.value and output.get_colour() != king.get_colour():
                 king.change_pos(k_pos)
                 return king if not attacking_p_return else output
             
@@ -383,13 +385,13 @@ def pawn_promotion(piece,screen,board,AI=False):
                         continue
                     index = np.where((position_possible == (row,col)).all(axis=1))[0][0]
                     if index:
-                        piece.change_type(type.N)
+                        piece.change_type(PieceType.N)
                         screen.blit(n_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
                         board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}N"
                         running = False
                         break
                     else:
-                        piece.change_type(type.Q) 
+                        piece.change_type(PieceType.Q) 
                         screen.blit(q_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
                         board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}Q"
                         running = False

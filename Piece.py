@@ -1,7 +1,7 @@
 from type_enum import *
 
 class Piece(): # defines the pieces with their colour, their piece type(it also contains the most general moves they can make) and their position
-    def __init__(self, piece_type:type, position, colour: Colour):
+    def __init__(self, piece_type:PieceType, position, colour: Colour):
         self.piece_type = piece_type
         self.position = np.array(position)
         self.Colour = colour
@@ -27,7 +27,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def get_name(self) -> str:
         return self.name
     
-    def change_type(self,new_type: type):
+    def change_type(self,new_type: PieceType):
         self.piece_type = new_type
         self.name = new_type.name
         

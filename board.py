@@ -34,7 +34,7 @@ class Board():
                 if board[row][col] == "--":
                     break
                 colour = getattr(Colour,board[row][col][0])
-                piece_type = getattr(type,board[row][col][1])
+                piece_type = getattr(PieceType,board[row][col][1])
                 
                 if colour.value == Colour.w.value:
                     whiteList.append(Piece(piece_type,np.array((row,col)),colour))
