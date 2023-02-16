@@ -35,7 +35,8 @@ def main():
         for e in p.event.get():
             
             if e.type == p.QUIT:
-                running = False
+                p.quit()
+                raise SystemExit
             
             elif e.type == p.MOUSEBUTTONDOWN:
                 
@@ -99,6 +100,7 @@ def main():
             if p_name != "p":
                 output = check_line(selected_p,all_possible,player_click[1],White_pList,Black_pList)
             else:
+                test = np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0)
                 output = check_line(selected_p,np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0),player_click[1],White_pList,Black_pList)
             
             if not output:
@@ -133,9 +135,10 @@ def main():
                 for move in moves:
                     c_board.move_piece(move[0],np.array(move[1]))
             else:
-                pawn_promotion(selected_p,screen,c_board.board)
+                gameState(screen,c_board.board)
                 selected_p.change_castle()
                 current_turn *= -1
+                pawn_promotion(selected_p,screen,c_board.board)
             
             moves = []
             sqSelected,player_click = reset(sqSelected,player_click)

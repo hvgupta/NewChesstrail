@@ -150,11 +150,15 @@ def piece_at_that_pos(coord, w_list, b_list) -> Piece:
     else:
         return 0
     
-def check_line(selected_p,all_possible, to,w_list,b_list) -> bool:
+def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1)
     if choosen_dir[0].size == 0:
         return False
-    line = all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]
+    line = np.array([])
+    if selected_p.get_name() != "p":
+        line = all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]
+    else:
+        line = (all_possible[choosen_dir[0][0],choosen_dir[1][0]]).reshape((1,2))
     if selected_p.get_name() == "K" and abs(to[1] - selected_p.get_position()[1]) == 2:
         if to[1] - selected_p.get_position()[1] == 2:
             np.add(line[0],np.array([line[0][0],line[0][1]-1]))
@@ -345,7 +349,7 @@ def get_attack_phile(king, all_possible,p_pos):
     return attacking_movs
 
 def pawn_promotion(piece,screen,board,AI=False):
-    if piece == None or piece == 0:
+    if piece == 0:
         return
     p_pos = piece.get_position()
     current_Colour = 0
@@ -374,7 +378,10 @@ def pawn_promotion(piece,screen,board,AI=False):
                     mouse_pos = p.mouse.get_pos()
                     col = mouse_pos[0]//SQ_SIZE
                     row = mouse_pos[1]//SQ_SIZE
-                    index = np.where((position_possible == (row,col)).all(axis=1) == True)[0][0]
+                    allowed = (position_possible == (row,col)).all(axis=1).any()
+                    if not allowed:
+                        continue
+                    index = np.where((position_possible == (row,col)).all(axis=1))[0][0]
                     if index:
                         piece.change_type(type.N)
                         screen.blit(n_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
