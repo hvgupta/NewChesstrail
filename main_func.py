@@ -32,6 +32,7 @@ def drawPieces(screen: p.Surface,board):
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
 def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list, all_attack = None):
+    # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     p_name = selected_p.get_name()
     isCheck = check(king_array[0],king_array[1],White_pList,Black_pList,True)
     condition = True
@@ -178,7 +179,7 @@ def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
             continue
     return True
 
-def valueDefiner(piece, pawn = False):
+def valueDefiner(piece):
     if piece == False:
         return 
     p_info = piece.get_info()

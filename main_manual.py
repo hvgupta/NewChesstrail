@@ -20,7 +20,7 @@ def main():
     current_turn = Colour.w.value
     sqSelected = ()
     player_click = []
-    moves = []
+    PastMoves = []
     whiteKing = White_pList[12]
     blackKing = Black_pList[4]
     selected_p = Piece
@@ -62,26 +62,27 @@ def main():
                 sqSelected,player_click=reset(sqSelected,player_click) # resets player click if the clicked tile is empty or of the wrong colour
                 continue
             
-            all_possible, all_attack = valueDefiner(selected_p)
-            
+            all_possible, all_attack = valueDefiner(selected_p) #gives all the moves possible legal and illegal
+            #shows those positions accoring to all the legal moves
             if selected_p != 0 and selected_p.get_name() != "p":
-                position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing])
+                position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing]) 
             elif selected_p != 0 and selected_p.get_name() == "p":
                 position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing],all_attack)
         
         elif len(player_click) == 2:
 
-            attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList)
+            attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved to
             
-            condition = not (attacked_p != 0  and attacked_p.get_colour() == selected_p.get_colour())
+            mov_to_legal_spot = not (attacked_p != 0  and attacked_p.get_colour() == selected_p.get_colour()) #checks if the piece is not attacking its own colour
                     
-            if not condition:
-                moves = []
+            if not mov_to_legal_spot: 
+                PastMoves = []
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
+
             p_name = selected_p.get_name()
                 
-            conditions = (
+            IsMovLegal = (
                 (((all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)] == player_click[1]).all(axis=1)).any())
                 or
                 (
@@ -91,23 +92,22 @@ def main():
                     )
                 )
                     
-            if not conditions:
-                moves = []
+            if not IsMovLegal:
+                PastMoves = []
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
             
-            output = None
+            PathNotBlocked = None #checks if there is not any piece blocking supposedly legal move
             if p_name != "p":
-                output = check_line(selected_p,all_possible,player_click[1],White_pList,Black_pList)
+                PathNotBlocked = check_line(selected_p,all_possible,player_click[1],White_pList,Black_pList)
             else:
-                test = np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0)
-                output = check_line(selected_p,np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0),player_click[1],White_pList,Black_pList)
+                PathNotBlocked = check_line(selected_p,np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0),player_click[1],White_pList,Black_pList)
             
-            if not output:
+            if not PathNotBlocked:
                 sqSelected, player_click = reset(sqSelected,player_click) #check if the move is blocked by any other piece
                 continue
             
-            if selected_p.get_name() == "K" and abs(player_click[1][1] - player_click[0][1]) == 2:
+            if selected_p.get_name() == "K" and abs(player_click[1][1] - player_click[0][1]) == 2: #checks for the castle conditoin
                 castle_valid = castle_checker(selected_p, np.array(player_click[1]),White_pList,Black_pList)
                 if not castle_valid:
                     continue
@@ -117,30 +117,30 @@ def main():
                 rook_to_pos = np.array([player_click[1][0],3]) if player_click[1][1] - player_click[0][1] == -2 else np.array([player_click[1][0],5])
                 c_board.move_piece(selected_p,np.array(np.array(player_click[1])))
                 c_board.move_piece(rook,rook_to_pos)
-                moves.append([selected_p, player_click[0]])
-                moves.append([rook, rook_old_pos])
+                PastMoves.append([selected_p, player_click[0]])
+                PastMoves.append([rook, rook_old_pos])
 
-            elif attacked_p == 0:
+            elif attacked_p == 0: #if the piece is moving to an empty space
                 c_board.move_piece(selected_p, np.array(sqSelected))
-                moves.append([selected_p,player_click[0]])
+                PastMoves.append([selected_p,player_click[0]])
 
-            elif attacked_p != 0:
+            elif attacked_p != 0:# if the piece is moving to a space which is occupied by the opposite team
                 c_board.move_piece(selected_p,np.array(sqSelected))
                 destroyed_p(attacked_p)
-                moves.append([selected_p,player_click[0]])
-                moves.append([attacked_p, player_click[1]])
+                PastMoves.append([selected_p,player_click[0]])
+                PastMoves.append([attacked_p, player_click[1]])
             
-            isCheck = check(whiteKing,blackKing,White_pList,Black_pList)  
-            if isCheck != False and isCheck.get_colour() == selected_p.get_colour():
-                for move in moves:
+            isCheck = check(whiteKing,blackKing,White_pList,Black_pList) #checks if the moves result into the self king being checked  
+            if isCheck != False and isCheck.get_colour() == selected_p.get_colour(): #if yes, then the moves are undone
+                for move in PastMoves:
                     c_board.move_piece(move[0],np.array(move[1]))
-            else:
+            else: #else piece is allowed to and the turn is given to the oppsote side
                 gameState(screen,c_board.board)
                 selected_p.change_castle()
                 current_turn *= -1
                 pawn_promotion(selected_p,screen,c_board.board)
             
-            moves = []
+            PastMoves = []
             sqSelected,player_click = reset(sqSelected,player_click)
         
         if isCheck != False:
