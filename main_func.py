@@ -31,11 +31,12 @@ def drawPieces(screen: p.Surface,board):
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list, all_attack = None):
+def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list,all_attack = None):
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     legal_moves = []
     p_name = selected_p.get_name()
     isCheck = check(king_array[0],king_array[1],White_pList,Black_pList,True)
+    checked_king = check(king_array[0],king_array[1],White_pList,Black_pList)
     surface = surface_creator(50)
     draw(screen,surface,"p",selected_p.get_position())
     attacking_p_movs = []
@@ -64,16 +65,18 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             end_of_Phile = False
             
             if output == 0:
-                Check = check(king_array[0],king_array[1],White_pList,Black_pList)
+                Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"c",pos)
                     legal_moves.append(pos)
             
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
+                old_pos = 0
                 if isCheck != False and (pos == isCheck.get_position()).all():
+                    old_pos = isCheck.get_position()
                     destroyed_p(isCheck)
-                Check = check(king_array[0],king_array[1],White_pList,Black_pList)
-                if isCheck != False:
+                Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
+                if isCheck != False and (pos == old_pos).all():
                     isCheck.change_pos(pos)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"r",pos)
@@ -97,7 +100,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 old = selected_p.get_position()
                 selected_p.change_pos(attack)
                 destroyed_p(output)
-                Check = check(king_array[0],king_array[1],White_pList,Black_pList)
+                Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
                 selected_p.change_pos(old)
                 output.change_pos(attack)
                 if Check != False and Check.get_colour() == selected_p.get_colour():
