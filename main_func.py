@@ -33,16 +33,16 @@ def drawPieces(screen: p.Surface,board):
 
 def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list, all_attack = None):
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
+    legal_moves = []
     p_name = selected_p.get_name()
     isCheck = check(king_array[0],king_array[1],White_pList,Black_pList,True)
-    condition = True
     surface = surface_creator(50)
     draw(screen,surface,"p",selected_p.get_position())
     attacking_p_movs = []
     if isCheck != False:
         checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
         if isCheck.get_name() != "p":
-            attacking_p_movs,skip = valueDefiner(isCheck)
+            attacking_p_movs,skip = movesReturn(isCheck)
             choosen_dir = np.nonzero(((checked_colour.get_position() == attacking_p_movs).all(axis=2))*1)
             attacking_p_movs = attacking_p_movs[choosen_dir[0][0],0:choosen_dir[1][0]]
             attacking_p_movs = np.append(attacking_p_movs,isCheck.get_position())
@@ -58,14 +58,6 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 break
             surface = surface_creator()
             output = piece_at_that_pos(pos,White_pList,Black_pList)
-            if isCheck != False:
-                condition = False
-                if selected_p.get_name() != 'K':
-                    condition = ((attacking_p_movs == pos).all(axis=1)).any()
-                else:
-                    condition = (isCheck.get_position() == pos).all() or ((attacking_p_movs != pos).all(axis=1)).any()
-                if not condition:
-                    continue
 
             old = selected_p.get_position()
             selected_p.change_pos(pos)
@@ -75,6 +67,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 Check = check(king_array[0],king_array[1],White_pList,Black_pList)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"c",pos)
+                    legal_moves.append(pos)
             
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
                 if isCheck != False and (pos == isCheck.get_position()).all():
@@ -84,6 +77,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                     isCheck.change_pos(pos)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"r",pos)
+                    legal_moves.append(pos)
                 end_of_Phile = True
                 
             elif (output != 0 and output.get_colour() == selected_p.get_colour()) or (p_name == "p" and output != 0):
@@ -110,15 +104,18 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                     continue
                 else:
                     draw(screen,surface,"r",attack)
+                    legal_moves.append(attack)
     
     if selected_p.get_name() == "K" and selected_p.get_castle():
         p_pos = selected_p.get_position()
-        for pos in PieceType.K.value[2]:
+        for pos in PieceType.K.value["castle"]:
             new_pos = pos+p_pos
             output = castle_checker(selected_p,new_pos,White_pList,Black_pList)
             if output:
                 surface = surface_creator()
                 draw(screen,surface,"c",new_pos)
+                legal_moves.append(pos)
+    return np.array(legal_moves)
                  
 def surface_creator(alpha=25):
     surface = p.Surface((512,512),p.SRCALPHA)
@@ -179,7 +176,7 @@ def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
             continue
     return True
 
-def valueDefiner(piece):
+def movesReturn(piece: Piece):
     if piece == False:
         return 
     p_info = piece.get_info()
@@ -189,26 +186,25 @@ def valueDefiner(piece):
     
     if p_name == "p":
         if (p_pos[0] == 6 and p_colour == Colour.w.value) or (p_pos[0] == 1 and p_colour == Colour.b.value):
-            all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour*np.arange(1,2).reshape(1,1)
+            all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*p_colour*np.arange(1,2).reshape(1,1)
         else:
-            all_possible = p_pos + np.expand_dims(p_info[1][0:1],axis=1)*p_colour*np.arange(1,2).reshape(1,1)
-        all_attack = p_pos + p_info[2]*p_colour*np.arange(1,2).reshape(1,1)
+            all_possible = p_pos + np.expand_dims(p_info["moves"][0:1],axis=1)*p_colour*np.arange(1,2).reshape(1,1)
+        all_attack = p_pos + p_info["attack"]*p_colour*np.arange(1,2).reshape(1,1)
         all_attack = all_attack[(np.max(all_attack,axis=1) < 8) & (np.min(all_attack,axis=1) > -1)]
         return all_possible, all_attack
     
     elif p_name == "N":
-        all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
+        all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*p_colour
         return all_possible,None
     
     elif p_name == "K":
+        all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*p_colour
         if piece.get_castle():
-            all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
-        else:
-            all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*p_colour
+            all_possible = np.append(all_possible,p_pos+ np.array(p_info["castle"]*p_colour)).reshape((10,1,2))
         return all_possible,None
     
     else:
-        all_possible = p_pos + np.expand_dims(p_info[1],axis=1)*np.arange(1,8).reshape(7,1)*p_colour
+        all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*np.arange(1,8).reshape(7,1)*p_colour
         return all_possible,None
     
 def castle_checker(king: Piece, to: np.array, White_pList, Black_pList) -> bool:
@@ -237,8 +233,8 @@ def castle_checker(king: Piece, to: np.array, White_pList, Black_pList) -> bool:
             r_val = 5
             k_val = 6
 
-        if (not check_line(king,valueDefiner(king)[0],np.array([K_pos[0],k_val]),White_pList,Black_pList) and 
-            not check_line(piece,valueDefiner(piece)[0],np.array([K_pos[0],r_val]),White_pList,Black_pList)):
+        if (not check_line(king,movesReturn(king)[0],np.array([K_pos[0],k_val]),White_pList,Black_pList) and 
+            not check_line(piece,movesReturn(piece)[0],np.array([K_pos[0],r_val]),White_pList,Black_pList)):
             return False
         return True
     return False
@@ -247,7 +243,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
     for king in [wking,bking]:
         if king == None:
             continue
-        king_movs = king.get_info()[1]
+        king_movs = king.get_info()["moves"]
         k_pos = king.get_position()
         for mov in king_movs:
             mov_num = mov*np.arange(1,8).reshape(7,1) + k_pos
@@ -255,7 +251,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
             for each in mov_num:
                 output = piece_at_that_pos(each,White_pList,Black_pList)
                 if output != 0 and output.get_colour() != king.get_colour():
-                    if ((mov == output.get_info()[1]).all(axis=1)).any() and output.get_name() != "p":
+                    if ((mov == output.get_info()["moves"]).all(axis=1)).any() and output.get_name() != "p":
                         if output.get_name() == "K" and np.where(each == mov_num) == 0:
                             pass
                         elif output.get_name() == "K" and np.where(each == mov_num) != 0:
@@ -265,7 +261,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
                     elif output != 0  and output.get_name() == "p":
                         index_array = (each == mov_num).all(axis=1).nonzero()        
                                    
-                        if ((np.array([abs(mov[0]),mov[1]]) == output.get_info()[2]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
+                        if ((np.array([abs(mov[0]),mov[1]]) == output.get_info()["attack"]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
                             king.change_pos(k_pos)
                             return king if not attacking_p_return else output
                         else:
@@ -274,7 +270,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
                         break
                 elif output !=0 and output.get_colour() == king.get_colour():
                     break
-        K_horse_check = PieceType.N.value[1]+k_pos
+        K_horse_check = PieceType.N.value["moves"]+k_pos
         K_horse_check = K_horse_check[(np.max(K_horse_check,axis=1)<8) & (np.min(K_horse_check,axis=1)>-1)]
         for movs in K_horse_check:
             output = piece_at_that_pos(movs,White_pList,Black_pList)
@@ -322,7 +318,7 @@ def check_mate(w_king,b_king, white_pList, black_pList):
         check_array = check_array[np.array([w_check_m,b_check_m])]
         correct_self_list = np.array([white_pList,black_pList])[np.array([w_check_m,b_check_m])]
         attacking_p = check(check_array[0], None,white_pList,black_pList,True)
-        attacking_p_movs,skip = valueDefiner(attacking_p)
+        attacking_p_movs,skip = movesReturn(attacking_p)
         attacking_phile = get_attack_phile(check_array[0],attacking_p_movs,attacking_p.get_position())
         if attacking_phile.any() == False:
             return False,False
@@ -399,7 +395,7 @@ def pawn_promotion(piece,screen,board,AI=False):
                         break
 
 def move_to_attack_line(piece, attack_movs, p_pos_return=False):
-    p_movs,all_attack = valueDefiner(piece)
+    p_movs,all_attack = movesReturn(piece)
     attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
     if piece.get_name() != "p":
         t_table = ((p_movs-attack_movs) == 0).all(axis=3)

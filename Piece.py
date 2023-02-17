@@ -9,7 +9,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
         if self.name in ["K","R"]:
             self.castle = True
 
-    def get_info(self) -> tuple:
+    def get_info(self) -> dict:
         return self.piece_type.value
     
     def get_colour(self) -> int:

@@ -63,7 +63,7 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
                 reduced_possible.append(b_piece)
                 to_array.append(piece_array)
     else:
-        all_movs,skip = valueDefiner(piece_checking)
+        all_movs,skip = movesReturn(piece_checking)
         if piece_checking.get_name() !="p":
             attacked_pos = get_attack_phile(p_king,all_movs,piece_checking.get_position())
         else:

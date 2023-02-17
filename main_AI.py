@@ -57,7 +57,7 @@ def main():
                 except:
                     pass
                 if selected_p != None:
-                    all_possible,all_attack = valueDefiner(selected_p)
+                    all_possible,all_attack = movesReturn(selected_p)
                     player_click.append(tuple(selected_p.get_position()))
                     player_click.append(tuple(p_move))
                 else:
@@ -74,7 +74,7 @@ def main():
                 sqSelected,player_click=reset(sqSelected,player_click)
                 continue
             
-            all_possible, all_attack = valueDefiner(selected_p)
+            all_possible, all_attack = movesReturn(selected_p)
             
             if selected_p != 0 and selected_p.get_name() != "p":
                 position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing])
