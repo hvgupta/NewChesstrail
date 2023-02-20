@@ -72,46 +72,10 @@ def main():
         
         elif len(player_click) == 2:
             
-            test = legal_moves.size != 0
             if not (legal_moves.size != 0 and (legal_moves == player_click[1]).all(axis=1).any()):
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
             attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved to
-            
-            (# mov_to_legal_spot = not (attacked_p != 0  and attacked_p.get_colour() == selected_p.get_colour()) #checks if the piece is not attacking its own colour
-                    
-            # if not mov_to_legal_spot: 
-            #     PastMoves = []
-            #     sqSelected,player_click = reset(sqSelected,player_click)
-            #     continue
-
-            # p_name = selected_p.get_name()
-                
-            # IsMovLegal = (
-            #     (((all_possible[(np.max(all_possible,axis=2) < 8) & (np.min(all_possible,axis=2)>-1)] == player_click[1]).all(axis=1)).any())
-            #     or
-            #     (
-            #         p_name == "p" and ((all_attack[(np.max(all_attack,axis=1) < 8) & (np.min(all_attack,axis=1)>-1)] == player_click[1]).all(axis=1)).any()
-            #         and
-            #         (attacked_p != 0 and attacked_p.get_colour() != selected_p.get_colour())
-            #         )
-            #     )
-                    
-            # if not IsMovLegal:
-            #     PastMoves = []
-            #     sqSelected,player_click = reset(sqSelected,player_click)
-            #     continue
-            
-            # PathNotBlocked = None #checks if there is not any piece blocking supposedly legal move
-            # if p_name != "p":
-            #     PathNotBlocked = check_line(selected_p,all_possible,player_click[1],White_pList,Black_pList)
-            # else:
-            #     PathNotBlocked = check_line(selected_p,np.expand_dims(all_possible if attacked_p == 0 else all_attack ,axis=0),player_click[1],White_pList,Black_pList)
-            
-            # if not PathNotBlocked:
-            #     sqSelected, player_click = reset(sqSelected,player_click) #check if the move is blocked by any other piece
-            #     continue
-            )
             
             if selected_p.get_name() == "K" and abs(player_click[1][1] - player_click[0][1]) == 2: #checks for the castle conditoin
                 castle_valid = castle_checker(selected_p, np.array(player_click[1]),White_pList,Black_pList)
@@ -119,28 +83,18 @@ def main():
                     continue
                 rook_xcoord = 0 if player_click[1][1] - player_click[0][1] == -2 else 7
                 rook = piece_at_that_pos(np.array([player_click[1][0],rook_xcoord]),White_pList,Black_pList)
-                # rook_old_pos = rook.get_position()
                 rook_to_pos = np.array([player_click[1][0],3]) if player_click[1][1] - player_click[0][1] == -2 else np.array([player_click[1][0],5])
                 c_board.move_piece(selected_p,np.array(np.array(player_click[1])))
                 c_board.move_piece(rook,rook_to_pos)
-                # PastMoves.append([selected_p, player_click[0]])
-                # PastMoves.append([rook, rook_old_pos])
 
             elif attacked_p == 0: #if the piece is moving to an empty space
                 c_board.move_piece(selected_p, np.array(sqSelected))
-                # PastMoves.append([selected_p,player_click[0]])
 
             elif attacked_p != 0:# if the piece is moving to a space which is occupied by the opposite team
                 c_board.move_piece(selected_p,np.array(sqSelected))
                 destroyed_p(attacked_p)
-                # PastMoves.append([selected_p,player_click[0]])
-                # PastMoves.append([attacked_p, player_click[1]])
             
             isCheck = check(whiteKing,blackKing,White_pList,Black_pList) #checks if the moves result into the self king being checked  
-            # if isCheck != False and isCheck.get_colour() == selected_p.get_colour(): #if yes, then the moves are undone
-            #     for move in PastMoves:
-            #         c_board.move_piece(move[0],np.array(move[1]))
-            # else: #else piece is allowed to and the turn is given to the opposite side
             gameState(screen,c_board.board)
             selected_p.change_castle()
             current_turn *= -1
@@ -160,6 +114,7 @@ def main():
             
         if w_checkMated or b_checkMated:
             running = False
+            game_end(1 if w_checkMated else 2,screen)
             continue
         
         p.display.flip()

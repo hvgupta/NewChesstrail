@@ -44,10 +44,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
         checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
         if isCheck.get_name() != "p":
             attacking_p_movs,skip = movesReturn(isCheck)
-            choosen_dir = np.nonzero(((checked_colour.get_position() == attacking_p_movs).all(axis=2))*1)
-            attacking_p_movs = attacking_p_movs[choosen_dir[0][0],0:choosen_dir[1][0]]
-            attacking_p_movs = np.append(attacking_p_movs,isCheck.get_position())
-            attacking_p_movs = attacking_p_movs.reshape((int(attacking_p_movs.shape[0]/2),2))
+            attacking_p_movs = get_attack_line(checked_colour,attacking_p_movs, isCheck.get_position())
         else:
             attacking_p_movs = np.expand_dims(copy.deepcopy(isCheck.get_position()),axis=0)
         
@@ -283,7 +280,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
             
     return False
 
-def check_mate(w_king,b_king, white_pList, black_pList):
+def check_mate(w_king:Piece,b_king:Piece, white_pList, black_pList):
     w_check_m = False
     b_check_m = False
     output_arr = []
@@ -308,6 +305,7 @@ def check_mate(w_king,b_king, white_pList, black_pList):
                 else:
                     output = None
                 output_arr.append(output)
+                king.change_pos(old)
             if not (False in output_arr) and king in output_arr and len(output_arr) > 0:
                 if king == w_king:
                     w_check_m = True
@@ -321,12 +319,18 @@ def check_mate(w_king,b_king, white_pList, black_pList):
         check_array = check_array[np.array([w_check_m,b_check_m])]
         correct_self_list = np.array([white_pList,black_pList])[np.array([w_check_m,b_check_m])]
         attacking_p = check(check_array[0], None,white_pList,black_pList,True)
-        attacking_p_movs,skip = movesReturn(attacking_p)
-        attacking_phile = get_attack_phile(check_array[0],attacking_p_movs,attacking_p.get_position())
-        if attacking_phile.any() == False:
+        attacking_line = []
+        if attacking_p.get_name() !=  'p':
+            attacking_p_movs,skip = movesReturn(attacking_p)
+            attacking_line = get_attack_line(check_array[0],attacking_p_movs,attacking_p.get_position())
+        else:
+            attacking_line = np.expand_dims(copy.deepcopy(attacking_p.get_position()),axis=0)
+        if attacking_line.any() == False:
             return False,False
         for piece in correct_self_list[0]:
-            to,piece_movs = move_to_attack_line(piece,attacking_phile,True)
+            if (piece.get_position() == (6,7)).all():
+                print("here")
+            to,piece_movs = move_to_attack_line(piece,attacking_line,True)
             if to.size > 0:
                 for movs in to:
                     if check_line(piece,piece_movs,movs,white_pList,black_pList):
@@ -341,11 +345,11 @@ def check_mate(w_king,b_king, white_pList, black_pList):
     
     return w_check_m,b_check_m
 
-def get_attack_phile(king, all_possible,p_pos):
-    choosen_dir = np.nonzero(((king.get_position() == all_possible).all(axis=2))*1)
+def get_attack_line(king, attacking_piece_moves,p_pos):
+    choosen_dir = np.nonzero(((king.get_position() == attacking_piece_moves).all(axis=2))*1)
     if choosen_dir[0].size == 0:
         return np.array([-1,-1])
-    attacking_movs = all_possible[choosen_dir[0][0], 0:choosen_dir[1][0]]
+    attacking_movs = attacking_piece_moves[choosen_dir[0][0], 0:choosen_dir[1][0]]
     attacking_movs = np.append(attacking_movs,p_pos)
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
     return attacking_movs
@@ -397,7 +401,7 @@ def pawn_promotion(piece,screen,board,AI=False):
                         running = False
                         break
 
-def move_to_attack_line(piece, attack_movs, p_pos_return=False):
+def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
     p_movs,all_attack = movesReturn(piece)
     attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
     if piece.get_name() != "p":
@@ -409,7 +413,7 @@ def move_to_attack_line(piece, attack_movs, p_pos_return=False):
             return to
     elif piece.get_name() == "p":
         all_attack = np.expand_dims(all_attack,axis=1)
-        t_table = ((all_attack-attack_movs) == 0).all(axis=3)
+        t_table = ((all_attack-attack_movs[-1]) == 0).all()
         to = all_attack[t_table.any(axis=0)]
         t_table = ((p_movs-attack_movs[:-1]) == 0).all(axis=3)
         to_extended = p_movs[t_table.any(axis=0)]
@@ -420,17 +424,19 @@ def move_to_attack_line(piece, attack_movs, p_pos_return=False):
         else:
             return to
 
-def game_end(case):
-    game_end_surface = surface_creator(100)
-    image_to_display = ''
-    if case == 0:
-        image_to_display = p.image.load("chess_pngs/draw.png")
-    elif case == 1:
-        image_to_display = p.image.load("chess_pngs/White.png")
-    elif case == 2:
-        image_to_display = p.image.load("chess_pngs/Black.png")
-    
-    game_end_surface.blit(image_to_display,p.Rect(4*SQ_SIZE,0,5*SQ_SIZE,5*SQ_SIZE))
+def game_end(case,screen):
+    game_end_screen = p.Surface((WIDTH,HEIGHT))
+    game_end_screen.fill((0,0,0))
+    game_end_screen.set_alpha(200)
+    p.font.init()
+    font = p.font.SysFont("monospace",70)
+    font.bold
+    text = "White wins" if case == 2 else "Black wins"
+    text_to_display = font.render(text,1, (165, 42, 42))
+    # game_end_screen.blit(text_to_display,(0,0))
+    screen.blit(game_end_screen,(0,0))
+    screen.blit(text_to_display,(35,100))
+    p.display.update()
     while True:
         for e in p.event.get():
             if e.type == p.QUIT:

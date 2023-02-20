@@ -65,9 +65,9 @@ def possible_movs_array(piece_checking,piece_list,enemy_list,p_king):
     else:
         all_movs,skip = movesReturn(piece_checking)
         if piece_checking.get_name() !="p":
-            attacked_pos = get_attack_phile(p_king,all_movs,piece_checking.get_position())
+            attacked_pos = get_attack_line(p_king,all_movs,piece_checking.get_position())
         else:
-            attacked_pos = get_attack_phile(p_king,np.expand_dims(skip,axis=1),piece_checking.get_position())
+            attacked_pos = get_attack_line(p_king,np.expand_dims(skip,axis=1),piece_checking.get_position())
         if (attacked_pos != np.array([-100,-100])).all():
             for b_piece in piece_list:
                 if b_piece.get_name() == "K":
