@@ -437,9 +437,3 @@ def game_end(case,screen):
     screen.blit(game_end_screen,(0,0))
     screen.blit(text_to_display,(35,100))
     p.display.update()
-    while True:
-        for e in p.event.get():
-            if e.type == p.QUIT:
-                p.quit()
-            elif e.type == p.MOUSEBUTTONDOWN:
-                p.quit()

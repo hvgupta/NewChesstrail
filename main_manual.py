@@ -20,7 +20,7 @@ def main():
     current_turn = Colour.w.value
     sqSelected = ()
     player_click = []
-    # PastMoves = []
+    game_ended = False
     legal_moves = []
     whiteKing = White_pList[12]
     blackKing = Black_pList[4]
@@ -38,6 +38,11 @@ def main():
             if e.type == p.QUIT:
                 p.quit()
                 raise SystemExit
+            
+            elif game_ended:
+                if e.type == p.MOUSEBUTTONDOWN:
+                    p.quit()
+                    raise SystemExit
             
             elif e.type == p.MOUSEBUTTONDOWN:
                 
@@ -115,7 +120,6 @@ def main():
         if w_checkMated or b_checkMated:
             running = False
             game_end(1 if w_checkMated else 2,screen)
-            continue
         
         p.display.flip()
 
