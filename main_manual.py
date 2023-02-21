@@ -40,9 +40,10 @@ def main():
                 raise SystemExit
             
             elif game_ended:
-                if e.type == p.MOUSEBUTTONDOWN:
-                    p.quit()
-                    raise SystemExit
+                while True:
+                    if e.type == p.MOUSEBUTTONDOWN:
+                        p.quit()
+                        raise SystemExit
             
             elif e.type == p.MOUSEBUTTONDOWN:
                 
@@ -120,6 +121,7 @@ def main():
         if w_checkMated or b_checkMated:
             running = False
             game_end(1 if w_checkMated else 2,screen)
+            p.time.wait(2000)
         
         p.display.flip()
 
