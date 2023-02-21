@@ -205,8 +205,6 @@ def movesReturn(piece: Piece):
     
     elif p_name == "K":
         all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*p_colour
-        # if piece.get_castle():
-        #     all_possible = np.append(all_possible,p_pos+ np.array(p_info["castle"]*p_colour)).reshape((10,1,2))
         return all_possible,None
     
     else:
@@ -385,17 +383,23 @@ def pawn_promotion(piece,screen,board,AI=False):
         elif piece.get_colour() == Colour.b.value:
             current_Colour = Colour.b
     if current_Colour != 0:
-        q_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}Q.png"),(SQ_SIZE,SQ_SIZE))
-        n_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}N.png"),(SQ_SIZE,SQ_SIZE))
-        if 7-p_pos[1] >= 3:
-            p.draw.rect(screen,(250,250,250),p.Rect((p_pos[1]+1)*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE*2,SQ_SIZE))
-            position_possible = p_pos + np.array([[0,1],[0,2]])
-        else:
-            p.draw.rect(screen,(250,250,250),p.Rect((p_pos[1]-2)*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE*2,SQ_SIZE))
-            position_possible = p_pos + np.array([[0,-1],[0,-2]])
+        q_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}Q.png"),(2*SQ_SIZE,2*SQ_SIZE))
+        n_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}N.png"),(2*SQ_SIZE,2*SQ_SIZE))
+        pawn_promotion_screen = p.Surface((WIDTH,HEIGHT))
+        pawn_promotion_screen.fill((0,0,0))
+        pawn_promotion_screen.set_alpha(200)
+        Piece_screen = p.Surface((WIDTH,HEIGHT))
+        # if 7-p_pos[1] >= 3:
+        p.draw.rect(pawn_promotion_screen,(250,250,250),p.Rect(5*SQ_SIZE,5*SQ_SIZE,SQ_SIZE*6,SQ_SIZE*3))
+        position_possible = np.array([[3,1],[3,2],[4,1],[4,2],[3,5],[3,6],[4,5],[4,6]])
+        # else:
+        #     p.draw.rect(pawn_promotion_screen,(250,250,250),p.Rect(5*SQ_SIZE,5*SQ_SIZE,SQ_SIZE*6,SQ_SIZE*3))
+        #     position_possible = p_pos + np.array([[0,-1],[0,-2]])
         running = True
-        screen.blit(q_piece, p.Rect(position_possible[0,1]*SQ_SIZE,position_possible[0,0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-        screen.blit(n_piece, p.Rect(position_possible[1,1]*SQ_SIZE,position_possible[1,0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+        Piece_screen.blit(q_piece, p.Rect(1*SQ_SIZE,3*SQ_SIZE,SQ_SIZE*2,SQ_SIZE*2))
+        Piece_screen.blit(n_piece, p.Rect(5*SQ_SIZE,3*SQ_SIZE,SQ_SIZE*2,SQ_SIZE*2))
+        pawn_promotion_screen.blit(Piece_screen,(0,0))
+        screen.blit(pawn_promotion_screen,(0,0))
         p.display.update()
         while running:
             for e in p.event.get():
@@ -407,7 +411,7 @@ def pawn_promotion(piece,screen,board,AI=False):
                     if not allowed:
                         continue
                     index = np.where((position_possible == (row,col)).all(axis=1))[0][0]
-                    if index:
+                    if index in [4,5,6,7]:
                         piece.change_type(PieceType.N)
                         screen.blit(n_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
                         board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}N"
@@ -426,10 +430,8 @@ def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
     if piece.get_name() != "p":
         t_table = ((p_movs-attack_movs) == 0).all(axis=3)
         to = p_movs[t_table.any(axis=0)]
-        if p_pos_return:
-            return to,p_movs
-        else:
-            return to
+        return to,p_movs if p_pos_return else to
+    
     elif piece.get_name() == "p":
         all_attack = np.expand_dims(all_attack,axis=1)
         t_table = ((all_attack-attack_movs[-1]) == 0).all()
@@ -438,10 +440,7 @@ def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
         to_extended = p_movs[t_table.any(axis=0)]
         to = np.append(to,to_extended)
         to = to.reshape((int(to.shape[0]/2),2))
-        if p_pos_return:
-            return to,all_attack
-        else:
-            return to
+        return to,all_attack if p_pos_return else to
 
 def game_end(case,screen):
     game_end_screen = p.Surface((WIDTH,HEIGHT))
@@ -452,7 +451,6 @@ def game_end(case,screen):
     font.bold
     text = "White wins" if case == 2 else "Black wins"
     text_to_display = font.render(text,1, (165, 42, 42))
-    # game_end_screen.blit(text_to_display,(0,0))
     screen.blit(game_end_screen,(0,0))
     screen.blit(text_to_display,(35,100))
     p.display.update()
