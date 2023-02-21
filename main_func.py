@@ -120,7 +120,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             if output:
                 surface = surface_creator()
                 draw(screen,surface,"c",new_pos)
-                legal_moves.append(pos)
+                legal_moves.append(new_pos)
     return np.array(legal_moves)
                  
 def surface_creator(alpha=25):
@@ -167,7 +167,7 @@ def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
         line = (all_possible[choosen_dir[0][0],choosen_dir[1][0]]).reshape((1,2))
     if selected_p.get_name() == "K" and abs(to[1] - selected_p.get_position()[1]) == 2:
         if to[1] - selected_p.get_position()[1] == 2:
-            np.add(line[0],np.array([line[0][0],line[0][1]-1]))
+            line = np.append(line,np.array([line[0][0],line[0][1]-1])).reshape((2,2))
         else:
             np.add(line[0],np.array([line[0][0],line[0][1]+1]))
     for pos in line:
@@ -205,8 +205,8 @@ def movesReturn(piece: Piece):
     
     elif p_name == "K":
         all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*p_colour
-        if piece.get_castle():
-            all_possible = np.append(all_possible,p_pos+ np.array(p_info["castle"]*p_colour)).reshape((10,1,2))
+        # if piece.get_castle():
+        #     all_possible = np.append(all_possible,p_pos+ np.array(p_info["castle"]*p_colour)).reshape((10,1,2))
         return all_possible,None
     
     else:
@@ -242,7 +242,18 @@ def castle_checker(king: Piece, to: np.array, White_pList, Black_pList) -> bool:
         if (not check_line(king,movesReturn(king)[0],np.array([K_pos[0],k_val]),White_pList,Black_pList) and 
             not check_line(piece,movesReturn(piece)[0],np.array([K_pos[0],r_val]),White_pList,Black_pList)):
             return False
-        return True
+        
+        k_old = king.get_position()
+        r_old = piece.get_position()
+        king.change_pos(np.array(to))
+        piece.change_pos(np.array([k_old[0],r_val]))
+        not_possible = False
+        isCheck = check(king,None,White_pList,Black_pList)
+        if isCheck != False and isCheck.get_colour() == king.get_colour():
+            not_possible = True
+        king.change_pos(k_old)
+        piece.change_pos(r_old)
+        return False if not_possible else True
     return False
 
 def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_return=False):
