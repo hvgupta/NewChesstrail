@@ -346,9 +346,10 @@ def check_mate(w_king:Piece,b_king:Piece, white_pList, black_pList):
         if attacking_line.any() == False:
             return False,False
         for piece in correct_self_list[0]:
-            if (piece.get_position() == (6,7)).all():
-                print("here")
-            to,piece_movs = move_to_attack_line(piece,attacking_line,True)
+            try:
+                to,piece_movs = move_to_attack_line(piece,attacking_line,True)
+            except:
+                continue
             if to.size > 0:
                 for movs in to:
                     if check_line(piece,piece_movs,movs,white_pList,black_pList):
