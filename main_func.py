@@ -62,17 +62,23 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             end_of_Phile = False
             
             if output == 0:
-                Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
+                if isCheck != False:
+                    Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
+                else:
+                    Check = check(king_array[0 if selected_p.get_colour() == Colour.w.value else 1],None,White_pList,Black_pList)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
                     draw(screen,surface,"c",pos)
                     legal_moves.append(pos)
             
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
                 old_pos = 0
+                Check = ''
                 if isCheck != False and (pos == isCheck.get_position()).all():
                     old_pos = isCheck.get_position()
                     destroyed_p(isCheck)
-                Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
+                    Check = check(checked_king if checked_king != False else None,None,White_pList,Black_pList)
+                else:
+                    Check = check(king_array[0 if selected_p.get_colour() == Colour.w.value else 1],None,White_pList,Black_pList)
                 if isCheck != False and (pos == old_pos).all():
                     isCheck.change_pos(pos)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
@@ -251,10 +257,11 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
             for each in mov_num:
                 output = piece_at_that_pos(each,White_pList,Black_pList)
                 if output != 0 and output.get_colour() != king.get_colour():
+                    # test = np.where((each == mov_num).all(axis=1) == True)
                     if ((mov == output.get_info()["moves"]).all(axis=1)).any() and output.get_name() != "p":
-                        if output.get_name() == "K" and np.where(each == mov_num) == 0:
-                            pass
-                        elif output.get_name() == "K" and np.where(each == mov_num) != 0:
+                        if output.get_name() == "K" and np.where((each == mov_num).all(axis=1) == True)[0] == 0:
+                            return king if not attacking_p_return else output
+                        elif output.get_name() == "K" and np.where((each == mov_num).all(axis=1) == True)[0] != 0:
                             break
                         king.change_pos(k_pos)
                         return king if not attacking_p_return else output
