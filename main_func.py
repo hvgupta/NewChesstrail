@@ -277,7 +277,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
                     elif output != 0  and output.get_name() == "p":
                         index_array = (each == mov_num).all(axis=1).nonzero()        
                                    
-                        if ((np.array([abs(mov[0]),mov[1]]) == output.get_info()["attack"]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
+                        if ((np.array([mov[0]*king.get_colour(),mov[1]]) == output.get_info()["attack"]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
                             king.change_pos(k_pos)
                             return king if not attacking_p_return else output
                         else:
