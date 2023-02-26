@@ -371,7 +371,7 @@ def get_attack_line(king, attacking_piece_moves,p_pos):
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
     return attacking_movs
 
-def pawn_promotion(piece,screen,board,AI=False):
+def pawn_promotion(piece:Piece,screen,board,AI=False):
     if piece == 0:
         return
     p_pos = piece.get_position()
@@ -389,12 +389,8 @@ def pawn_promotion(piece,screen,board,AI=False):
         pawn_promotion_screen.fill((0,0,0))
         pawn_promotion_screen.set_alpha(200)
         Piece_screen = p.Surface((WIDTH,HEIGHT))
-        # if 7-p_pos[1] >= 3:
         p.draw.rect(pawn_promotion_screen,(250,250,250),p.Rect(5*SQ_SIZE,5*SQ_SIZE,SQ_SIZE*6,SQ_SIZE*3))
         position_possible = np.array([[3,1],[3,2],[4,1],[4,2],[3,5],[3,6],[4,5],[4,6]])
-        # else:
-        #     p.draw.rect(pawn_promotion_screen,(250,250,250),p.Rect(5*SQ_SIZE,5*SQ_SIZE,SQ_SIZE*6,SQ_SIZE*3))
-        #     position_possible = p_pos + np.array([[0,-1],[0,-2]])
         running = True
         Piece_screen.blit(q_piece, p.Rect(1*SQ_SIZE,3*SQ_SIZE,SQ_SIZE*2,SQ_SIZE*2))
         Piece_screen.blit(n_piece, p.Rect(5*SQ_SIZE,3*SQ_SIZE,SQ_SIZE*2,SQ_SIZE*2))
@@ -434,8 +430,9 @@ def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
     
     elif piece.get_name() == "p":
         all_attack = np.expand_dims(all_attack,axis=1)
-        t_table = ((all_attack-attack_movs[-1]) == 0).all()
-        to = all_attack[t_table.any(axis=0)]
+        test = ((all_attack-attack_movs[-1]) == 0)
+        t_table = ((all_attack-attack_movs[-1]) == 0).all(axis=2).reshape(1,2,1)
+        to = all_attack[t_table[0]]
         t_table = ((p_movs-attack_movs[:-1]) == 0).all(axis=3)
         to_extended = p_movs[t_table.any(axis=0)]
         to = np.append(to,to_extended)
