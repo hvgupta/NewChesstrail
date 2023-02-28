@@ -109,16 +109,19 @@ def main():
                 p.transform.scale(
                     p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE)
                 )
-        
+        if draw_check(White_pList,Black_pList,[whiteKing,blackKing]):
+            game_end(0,screen)
+            running = False
+            break
         p.display.update()
             
         if w_checkMated or b_checkMated:
-            running = False
             game_end(1 if w_checkMated else 2,screen)
             running = False
             break
         
         p.display.flip()
+    
         
     while True:
         for e in p.event.get():

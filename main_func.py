@@ -31,14 +31,14 @@ def drawPieces(screen: p.Surface,board):
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list,all_attack = None):
+def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list,all_attack = None, return_mov = False):
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     legal_moves = []
     p_name = selected_p.get_name()
     isCheck = check(king_array[0],king_array[1],White_pList,Black_pList,True)
     checked_king = check(king_array[0],king_array[1],White_pList,Black_pList)
     surface = surface_creator(50)
-    draw(screen,surface,"p",selected_p.get_position())
+    draw(screen,surface,"p",selected_p.get_position()) if not return_mov else 0
     attacking_p_movs = []
     if isCheck != False:
         checked_colour = king_array[0] if isCheck.get_colour() == Colour.b.value else king_array[1]
@@ -67,7 +67,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 else:
                     Check = check(king_array[0 if selected_p.get_colour() == Colour.w.value else 1],None,White_pList,Black_pList)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
-                    draw(screen,surface,"c",pos)
+                    draw(screen,surface,"c",pos) if not return_mov else 0
                     legal_moves.append(pos)
             
             elif output != 0 and output.get_colour() != selected_p.get_colour() and selected_p.get_name() != "p":
@@ -82,7 +82,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 if isCheck != False and (pos == old_pos).all():
                     isCheck.change_pos(pos)
                 if not(Check != False and Check.get_colour() == selected_p.get_colour()):
-                    draw(screen,surface,"r",pos)
+                    draw(screen,surface,"r",pos) if not return_mov else 0
                     legal_moves.append(pos)
                 end_of_Phile = True
                 
@@ -109,7 +109,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 if Check != False and Check.get_colour() == selected_p.get_colour():
                     continue
                 else:
-                    draw(screen,surface,"r",attack)
+                    draw(screen,surface,"r",attack) if not return_mov else 0
                     legal_moves.append(attack)
     
     if selected_p.get_name() == "K" and selected_p.get_castle():
@@ -119,7 +119,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             output = castle_checker(selected_p,new_pos,White_pList,Black_pList)
             if output:
                 surface = surface_creator()
-                draw(screen,surface,"c",new_pos)
+                draw(screen,surface,"c",new_pos) if not return_mov else 0
                 legal_moves.append(new_pos)
     return np.array(legal_moves)
                  
@@ -189,6 +189,13 @@ def movesReturn(piece: Piece):
     p_colour = piece.get_colour()
     p_pos = piece.get_position()
     p_name = piece.get_name()
+    
+    try:
+        if p_pos == None:
+            return None
+    except:
+        pass
+    
     
     if p_name == "p":
         if (p_pos[0] == 6 and p_colour == Colour.w.value) or (p_pos[0] == 1 and p_colour == Colour.b.value):
@@ -266,7 +273,6 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
             for each in mov_num:
                 output = piece_at_that_pos(each,White_pList,Black_pList)
                 if output != 0 and output.get_colour() != king.get_colour():
-                    # test = np.where((each == mov_num).all(axis=1) == True)
                     if ((mov == output.get_info()["moves"]).all(axis=1)).any() and output.get_name() != "p":
                         if output.get_name() == "K" and np.where((each == mov_num).all(axis=1) == True)[0] == 0:
                             return king if not attacking_p_return else output
@@ -382,22 +388,31 @@ def pawn_promotion(piece:Piece,screen,board,AI=False):
             current_Colour = Colour.w
         elif piece.get_colour() == Colour.b.value:
             current_Colour = Colour.b
+            
     if current_Colour != 0:
-        q_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}Q.png"),(2*SQ_SIZE,2*SQ_SIZE))
-        n_piece = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}N.png"),(2*SQ_SIZE,2*SQ_SIZE))
+        
+        piece_image = {"Q": '', "R": '', "B": '', "N": ''}
+        for Piece_letter in piece_image.keys():
+            piece_image[Piece_letter] = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}{Piece_letter}.png"),(2*SQ_SIZE,2*SQ_SIZE))
+    
         pawn_promotion_screen = p.Surface((WIDTH,HEIGHT))
         pawn_promotion_screen.fill((0,0,0))
         pawn_promotion_screen.set_alpha(200)
         Piece_screen = p.Surface((WIDTH,HEIGHT))
         p.draw.rect(pawn_promotion_screen,(250,250,250),p.Rect(5*SQ_SIZE,5*SQ_SIZE,SQ_SIZE*6,SQ_SIZE*3))
-        position_possible = np.array([[3,1],[3,2],[4,1],[4,2],[3,5],[3,6],[4,5],[4,6]])
+        
+        position_possible = np.array([[3,0],[3,1],[4,0],[4,1],[3,2],[3,3],[4,2],[4,3],[3,4],[3,5],[4,4],[4,5],[3,6],[3,7],[4,6],[4,7]])
         running = True
-        Piece_screen.blit(q_piece, p.Rect(1*SQ_SIZE,3*SQ_SIZE,SQ_SIZE*2,SQ_SIZE*2))
-        Piece_screen.blit(n_piece, p.Rect(5*SQ_SIZE,3*SQ_SIZE,SQ_SIZE*2,SQ_SIZE*2))
+        coord = 0
+        for image in piece_image.values():
+            Piece_screen.blit(image, p.Rect(coord*SQ_SIZE,3*SQ_SIZE,2*SQ_SIZE,2*SQ_SIZE))
+            coord+=2
+
         pawn_promotion_screen.blit(Piece_screen,(0,0))
         screen.blit(pawn_promotion_screen,(0,0))
         p.display.update()
         while running:
+            
             for e in p.event.get():
                 if e.type == p.MOUSEBUTTONDOWN:
                     mouse_pos = p.mouse.get_pos()
@@ -406,19 +421,22 @@ def pawn_promotion(piece:Piece,screen,board,AI=False):
                     allowed = (position_possible == (row,col)).all(axis=1).any()
                     if not allowed:
                         continue
+                    
                     index = np.where((position_possible == (row,col)).all(axis=1))[0][0]
-                    if index in [4,5,6,7]:
-                        piece.change_type(PieceType.N)
-                        screen.blit(n_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-                        board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}N"
-                        running = False
-                        break
+                    piece_type = ''
+                    if index in [12,13,14,15]:
+                        piece_type = 'N'
+                    elif index in [8,9,10,11]:
+                        piece_type = 'B'
+                    elif index in [4,5,6,7]:
+                        piece_type = 'R'
                     else:
-                        piece.change_type(PieceType.Q) 
-                        screen.blit(q_piece,p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-                        board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}Q"
-                        running = False
-                        break
+                        piece_type = 'Q'
+                    piece.change_type(getattr(PieceType,piece_type))
+                    screen.blit(piece_image[piece_type],p.Rect(p_pos[1]*SQ_SIZE,p_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
+                    board[p_pos[0]][p_pos[1]] = f"{current_Colour.name}{piece_type}"
+                    running = False
+                    break
 
 def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
     p_movs,all_attack = movesReturn(piece)
@@ -430,7 +448,6 @@ def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
     
     elif piece.get_name() == "p":
         all_attack = np.expand_dims(all_attack,axis=1)
-        test = ((all_attack-attack_movs[-1]) == 0)
         t_table = ((all_attack-attack_movs[-1]) == 0).all(axis=2).reshape(1,2,1)
         to = all_attack[t_table[0]]
         t_table = ((p_movs-attack_movs[:-1]) == 0).all(axis=3)
@@ -446,8 +463,32 @@ def game_end(case,screen):
     p.font.init()
     font = p.font.SysFont("monospace",70)
     font.bold
-    text = "White wins" if case == 2 else "Black wins"
+    text = "White wins" if case == 2 else ("draw" if case == 0 else "Black wins")
     text_to_display = font.render(text,1, (165, 42, 42))
     screen.blit(game_end_screen,(0,0))
     screen.blit(text_to_display,(35,100))
     p.display.update()
+
+def draw_check(White_pList, Black_pList, king_array)-> bool:
+    w_has_legal_moves = False
+    b_has_legal_moves = False
+    for side,P_bool in zip([White_pList,Black_pList],[w_has_legal_moves,b_has_legal_moves]):
+        for piece in side:
+            try:
+                if piece.get_position() == None:
+                    continue
+            except:
+                0
+            legal_moves = 0
+            if piece.get_name() == "p":
+                all_moves,all_attack = movesReturn(piece)
+                legal_moves = position_shower(all_moves.reshape((all_moves.shape[1],all_moves.shape[0],2)),White_pList,Black_pList,None, piece,king_array,all_attack,True)
+            else:
+                all_moves,all_attack = movesReturn(piece)
+                legal_moves = position_shower(all_moves,White_pList,Black_pList,None, piece,king_array,all_attack,True)
+            if legal_moves.size > 0:
+                P_bool = True
+                break
+        if not P_bool:
+            return True 
+    return False
