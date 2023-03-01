@@ -1,7 +1,7 @@
 import pygame as p
 from board import *
-from main_func import *
-        
+from Helper_func import *
+         
 def main():
     # initialising pygame ...
     p.init()
@@ -9,7 +9,7 @@ def main():
     screen.fill(p.Color("white"))
     
     #creating the chess board array
-    c_board = Board()
+    c_board = Board("8/8/8/k7/7K/8/8/8 w")
     White_pList, Black_pList = c_board.initialise(c_board.board)
     
     #inseting images on to the pygame window 
@@ -17,13 +17,11 @@ def main():
     
     #declaring variables for later use
     running = True
-    current_turn = Colour.w.value
+    current_turn = c_board.Turn.value
     sqSelected = ()
     player_click = []
-    game_ended = False
     legal_moves = []
-    whiteKing = White_pList[12]
-    blackKing = Black_pList[4]
+    whiteKing, blackKing = getKing(White_pList, Black_pList)
     selected_p = Piece
     
     def reset(sqSelected,player_click): # resets the sqSelected and player_click

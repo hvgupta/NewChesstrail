@@ -8,6 +8,17 @@ DIMENSION = 8
 SQ_SIZE = HEIGHT//DIMENSION
 IMAGES = {}
 
+def getKing(white_pList,black_pList):
+    white_king = ''
+    black_king = ''
+    for piece in white_pList+black_pList:
+        if piece.get_name() == "K" and piece.get_colour() == Colour.w.value:
+            white_king = piece
+        elif piece.get_name() == "K" and piece.get_colour() == Colour.b.value:
+            black_king = piece
+        if black_king != '' and white_king != '':
+            return white_king,black_king
+
 def loadImages():
     pieces = ["wp","bp","wR","wB","wK","wQ","wN","bR","bB","bK","bQ","bN"]
     for piece in pieces:
@@ -138,9 +149,10 @@ def draw(screen,surface, r_or_c:str, pos):
         p.draw.rect(surface,(255,255,0),p.Rect(pos[1]*SQ_SIZE,pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
     screen.blit(surface,(0,0))
 
-def destroyed_p(attacked_p):
+def destroyed_p(attacked_p:Piece):
     if attacked_p != 0:
         attacked_p.change_pos(None)
+        attacked_p.destroyed = True
                 
 def piece_at_that_pos(coord, w_list, b_list) -> Piece:
     piece = None
@@ -155,7 +167,7 @@ def piece_at_that_pos(coord, w_list, b_list) -> Piece:
         return piece
     else:
         return 0
-    
+
 def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1)
     if choosen_dir[0].size == 0:
@@ -183,19 +195,12 @@ def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
     return True
 
 def movesReturn(piece: Piece):
-    if piece == False:
+    if piece == False or piece.destroyed():
         return 
     p_info = piece.get_info()
     p_colour = piece.get_colour()
     p_pos = piece.get_position()
     p_name = piece.get_name()
-    
-    try:
-        if p_pos == None:
-            return None
-    except:
-        pass
-    
     
     if p_name == "p":
         if (p_pos[0] == 6 and p_colour == Colour.w.value) or (p_pos[0] == 1 and p_colour == Colour.b.value):
@@ -474,11 +479,8 @@ def draw_check(White_pList, Black_pList, king_array)-> bool:
     b_has_legal_moves = False
     for side,P_bool in zip([White_pList,Black_pList],[w_has_legal_moves,b_has_legal_moves]):
         for piece in side:
-            try:
-                if piece.get_position() == None:
-                    continue
-            except:
-                0
+            if piece.destroyed():
+                continue
             legal_moves = 0
             if piece.get_name() == "p":
                 all_moves,all_attack = movesReturn(piece)

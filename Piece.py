@@ -8,6 +8,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
         self.name = self.piece_type.name
         if self.name in ["K","R"]:
             self.castle = True
+        self.destroyed = False
 
     def get_info(self) -> dict:
         return self.piece_type.value
