@@ -9,7 +9,7 @@ def main():
     screen.fill(p.Color("white"))
     
     #creating the chess board array
-    c_board = Board("8/8/8/k7/7K/8/8/8 w")
+    c_board = Board("")
     White_pList, Black_pList = c_board.initialise(c_board.board)
     
     #inseting images on to the pygame window 
