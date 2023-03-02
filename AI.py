@@ -1,9 +1,8 @@
 import random
-from main_func import *
-from stockfish import Stockfish
+from Helper_func import *
 from board import *
 
-stockfish = Stockfish(r'V:\Harsh\Python\Chess\NewChesstrail\stockfish-11-win\Windows\stockfish_20011801_x64', depth=18, parameters={"Threads": 2, "Minimum Thinking Time": 30})
+# stockfish = Stockfish(r'V:\Harsh\Python\Chess\NewChesstrail\stockfish-11-win\Windows\stockfish_20011801_x64', depth=18, parameters={"Threads": 2, "Minimum Thinking Time": 30})
 
 def randomchooser(blacklist):
     if blacklist == None:
@@ -163,11 +162,11 @@ def board2fen(board, w_castle, b_castle):
     
     return fen
 
-def fen2move(fen):
-    stockfish.set_fen_position(fen)
-    move = stockfish.get_best_move()
-    return move
+# def fen2move(fen):
+#     stockfish.set_fen_position(fen)
+#     move = stockfish.get_best_move()
+#     return move
 
-c_board = Board()
-fen_string = board2fen(c_board.board, "","")
-print(fen2move(fen_string))
+# c_board = Board()
+# fen_string = board2fen(c_board.board, "","")
+# print(fen2move(fen_string))

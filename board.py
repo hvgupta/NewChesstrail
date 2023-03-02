@@ -35,6 +35,9 @@ class Board():
             self.Turn = Colour.w if turn == "w" else Colour.b
     
     def move_piece(self,piece: Piece,to: list):
+        if piece == "--":
+            self.board[to[0]][to[1]] = "--"
+            return
         old_pos = piece.get_position()
         piece.change_pos(to)
         old = self.board[old_pos[0]][old_pos[1]]

@@ -8,6 +8,8 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
         self.name = self.piece_type.name
         if self.name in ["K","R"]:
             self.castle = True
+        if self.name == "p":
+            self.K_from_en_passant = False
         self.destroyed = False
 
     def get_info(self) -> dict:
@@ -24,6 +26,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     
     def change_pos(self,new_pos):
         self.position = new_pos
+        self.destroyed = False
     
     def get_name(self) -> str:
         return self.name
@@ -38,5 +41,16 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def change_castle(self):
         if self.name in ["K","R"]:
             self.castle = False
+            
     def isDestroyed(self):
-        return self.destroyed           
+        return self.destroyed
+    
+    def can_be_en_passant(self):
+        if self.name != "p":
+            return False
+        return self.K_from_en_passant
+    
+    def change_en_passant(self, condition):
+        if self.name != "p":
+            return
+        self.K_from_en_passant = condition

@@ -73,9 +73,14 @@ def main(fen = ""):
             if not (legal_moves.size != 0 and (legal_moves == player_click[1]).all(axis=1).any()):
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
-            attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved to
+            attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved 
             
-            if selected_p.get_name() == "K" and abs(player_click[1][1] - player_click[0][1]) == 2: #checks for the castle conditoin
+            if selected_p.get_name() == "p" and abs(player_click[0][0] - player_click[1][0]) == 2:
+                selected_p.change_en_passant(True) 
+            elif selected_p.get_name() == "p" and abs(player_click[0][0] - player_click[1][0]) == 1:
+                selected_p.change_en_passant(False)
+            
+            if selected_p.get_name() == "K" and abs(player_click[1][1] - player_click[0][1]) == 2: #checks for the castle condition
                 castle_valid = castle_checker(selected_p, np.array(player_click[1]),White_pList,Black_pList)
                 if not castle_valid:
                     continue
@@ -87,6 +92,10 @@ def main(fen = ""):
 
             elif attacked_p == 0: #if the piece is moving to an empty space
                 c_board.move_piece(selected_p, np.array(sqSelected))
+                check_for_en_passant = piece_at_that_pos(np.array([sqSelected]) - np.array([selected_p.get_colour(),0]), White_pList, Black_pList)
+                if check_for_en_passant != 0 and selected_p.get_name() == "p":
+                    destroyed_p(check_for_en_passant)
+                    c_board.move_piece("--",( np.array([sqSelected]) - np.array([selected_p.get_colour(),0])).reshape((2)))
 
             elif attacked_p != 0:# if the piece is moving to a space which is occupied by the opposite team
                 c_board.move_piece(selected_p,np.array(sqSelected))
@@ -97,8 +106,7 @@ def main(fen = ""):
             selected_p.change_castle()
             current_turn *= -1
             pawn_promotion(selected_p,screen,c_board.board)
-            
-            # PastMoves = []
+
             sqSelected,player_click = reset(sqSelected,player_click)
         
         if isCheck != False:

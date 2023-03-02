@@ -109,7 +109,23 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
             surface = surface_creator()
             output = piece_at_that_pos(attack,White_pList,Black_pList)
             if output == 0:
-                continue
+                en_passanted_pawn = piece_at_that_pos(np.array([attack[0]-selected_p.get_colour(),attack[1]]), White_pList, Black_pList)
+                if en_passanted_pawn == 0 or (en_passanted_pawn.get_name() != "p") or (en_passanted_pawn.get_name() == "p" and not en_passanted_pawn.can_be_en_passant()) or en_passanted_pawn.get_colour() == selected_p.get_colour():
+                    continue
+                e_old = en_passanted_pawn.get_position()
+                destroyed_p(en_passanted_pawn)
+                old = selected_p.get_position()
+                selected_p.change_pos(attack)
+                Check = check(checked_king if checked_king != False else None, None, White_pList, Black_pList)
+                selected_p.change_pos(old)
+                en_passanted_pawn.change_pos(e_old)
+                if Check != False and Check.get_colour() == selected_p.get_colour():
+                    continue
+                else:
+                    draw(screen, surface,"c", attack) if not return_mov else 0
+                    draw(screen, surface,"r", en_passanted_pawn.get_position()) if not return_mov else 0
+                    legal_moves.append(attack)
+                
             elif output.get_colour() != selected_p.get_colour():
                 old = selected_p.get_position()
                 selected_p.change_pos(attack)
@@ -122,6 +138,7 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 else:
                     draw(screen,surface,"r",attack) if not return_mov else 0
                     legal_moves.append(attack)
+        
     
     if selected_p.get_name() == "K" and selected_p.get_castle():
         p_pos = selected_p.get_position()
