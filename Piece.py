@@ -38,4 +38,5 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def change_castle(self):
         if self.name in ["K","R"]:
             self.castle = False
-            
+    def isDestroyed(self):
+        return self.destroyed           

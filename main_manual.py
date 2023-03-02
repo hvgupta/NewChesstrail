@@ -2,14 +2,14 @@ import pygame as p
 from board import *
 from Helper_func import *
          
-def main():
+def main(fen = ""):
     # initialising pygame ...
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     
     #creating the chess board array
-    c_board = Board("")
+    c_board = Board(fen)
     White_pList, Black_pList = c_board.initialise(c_board.board)
     
     #inseting images on to the pygame window 
@@ -131,5 +131,41 @@ def main():
                 p.quit()
                 raise SystemExit
 
-if __name__ == "__main__":    
-    main()
+if __name__ == "__main__":
+    p.init()
+    p.font.init()
+    start_screen = p.display.set_mode((WIDTH,HEIGHT))
+    start_screen.fill((0,0,0))
+    base_font =  p.font.SysFont("monospace",16)
+    input_fen = ''
+    input_rect = p.Rect(0,200,500,50)
+    running = True
+    while running:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                p.quit()
+                raise SystemExit
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_BACKSPACE:
+                    input_fen = input_fen[:-1]
+                elif e.key == p.K_RETURN:
+                    running = False
+                    break
+                # elif e.key == p.K_v and e.mod & p.KMOD_CTRL:
+                #     input_fen = p.scrap.get(p.SCRAP_TEXT)
+                else:
+                    input_fen += e.unicode
+        instruction_font = p.font.SysFont("monospace", 29)
+        instruction_font.set_bold(5) 
+        instruction1 = instruction_font.render("Enter a 'FEN' string", True, (255,255,255))
+        instruction2 = instruction_font.render("or just enter to start a", True, (255,255,255))
+        instruction3 = instruction_font.render("normal game", True, (255,255,255))
+        p.draw.rect(start_screen, (255,255,255), input_rect)
+        text_surface = base_font.render(input_fen, True, (0,0,0))
+        start_screen.blit(text_surface, (input_rect.x+5, input_rect.y+5))
+        start_screen.blit(instruction1, (0,50))
+        start_screen.blit(instruction2, (0,90))
+        start_screen.blit(instruction3, (0,130))
+        p.display.update()
+        
+    main(input_fen)

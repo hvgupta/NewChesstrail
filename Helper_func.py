@@ -195,7 +195,7 @@ def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
     return True
 
 def movesReturn(piece: Piece):
-    if piece == False or piece.destroyed():
+    if piece == False or piece.isDestroyed():
         return 
     p_info = piece.get_info()
     p_colour = piece.get_colour()
@@ -479,7 +479,7 @@ def draw_check(White_pList, Black_pList, king_array)-> bool:
     b_has_legal_moves = False
     for side,P_bool in zip([White_pList,Black_pList],[w_has_legal_moves,b_has_legal_moves]):
         for piece in side:
-            if piece.destroyed():
+            if piece.isDestroyed():
                 continue
             legal_moves = 0
             if piece.get_name() == "p":

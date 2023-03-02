@@ -18,6 +18,7 @@ class Board():
                 ["wp","wp","wp","wp","wp","wp","wp","wp"],
                 ["wR","wN","wB","wQ","wK","wB","wN","wR"]
                 ]
+            self.Turn = Colour.w
         else:
             row = 0
             index = 0
@@ -30,8 +31,8 @@ class Board():
                     row+=1
                 else: break
                 index +=1
-        turn = fen[index+1]
-        self.Turn = Colour.w if turn == "w" else Colour.b
+            turn = fen[index+1]
+            self.Turn = Colour.w if turn == "w" else Colour.b
     
     def move_piece(self,piece: Piece,to: list):
         old_pos = piece.get_position()
