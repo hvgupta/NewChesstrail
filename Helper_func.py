@@ -173,7 +173,7 @@ def destroyed_p(attacked_p:Piece):
                 
 def piece_at_that_pos(coord, w_list, b_list) -> Piece:
     piece = None
-    for p in w_list+b_list:
+    for p in (w_list if w_list != None else [])+(b_list if b_list != None else []):
         try:
             if (p.get_position() == coord).all():
                 piece = p
@@ -285,7 +285,7 @@ def castle_checker(king: Piece, to: np.array, White_pList, Black_pList) -> bool:
 
 def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_return=False):
     for king in [wking,bking]:
-        if king == None:
+        if king == None or king.isDestroyed():
             continue
         king_movs = king.get_info()["moves"]
         k_pos = king.get_position()
