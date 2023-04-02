@@ -12,7 +12,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
             self.K_from_en_passant = False
         self.destroyed = False
 
-    def get_info(self) -> dict:
+    def get_info(self) -> dict[str,int]:
         return self.piece_type.value
     
     def get_colour(self) -> int:
@@ -21,7 +21,7 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def get_points(self) -> int:
         return self.piece_type.value[1]
     
-    def get_position(self):
+    def get_position(self) -> np.ndarray:
         return self.position
     
     def change_pos(self,new_pos):
@@ -38,14 +38,14 @@ class Piece(): # defines the pieces with their colour, their piece type(it also 
     def get_castle(self) -> bool:
         return self.castle
 
-    def change_castle(self):
+    def change_castle(self) -> None:
         if self.name in ["K","R"]:
             self.castle = False
             
-    def isDestroyed(self):
+    def isDestroyed(self) -> bool:
         return self.destroyed
     
-    def can_be_en_passant(self):
+    def can_be_en_passant(self) -> bool:
         if self.name != "p":
             return False
         return self.K_from_en_passant

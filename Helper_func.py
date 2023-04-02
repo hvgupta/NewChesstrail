@@ -8,7 +8,7 @@ DIMENSION = 8
 SQ_SIZE = HEIGHT//DIMENSION
 IMAGES = {}
 
-def getKing(white_pList,black_pList):
+def getKing(white_pList:list[Piece],black_pList:list[Piece]):
     white_king = ''
     black_king = ''
     for piece in white_pList+black_pList:
@@ -24,7 +24,7 @@ def loadImages():
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("chess_pngs/{piece}.png".format(piece= piece)),(SQ_SIZE,SQ_SIZE))
 
-def gameState(screen: p.Surface, board):
+def gameState(screen: p.Surface, board:list[list[str]]):
     drawboard(screen)
     drawPieces(screen,board)
     
@@ -35,14 +35,16 @@ def drawboard(screen: p.Surface):
             colour = colours[((r+c)%2)]
             p.draw.rect(screen, colour, p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def drawPieces(screen: p.Surface,board):
+def drawPieces(screen: p.Surface,board: list[list[str]]):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r][c]
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def position_shower(all_possible, White_pList: list, Black_pList: list, screen: p.Surface, selected_p: Piece, king_array: list,all_attack = None, return_mov = False):
+def position_shower(
+    all_possible:np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], screen: p.Surface, 
+    selected_p: Piece, king_array: list[Piece],all_attack:np.ndarray = None, return_mov:bool = False):
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     legal_moves = []
     p_name = selected_p.get_name()
@@ -151,13 +153,13 @@ def position_shower(all_possible, White_pList: list, Black_pList: list, screen: 
                 legal_moves.append(new_pos)
     return np.array(legal_moves)
                  
-def surface_creator(alpha=25):
+def surface_creator(alpha:int=25):
     surface = p.Surface((512,512),p.SRCALPHA)
     surface.set_colorkey(p.Color("White"))
     surface.set_alpha(alpha)
     return surface
 
-def draw(screen,surface, r_or_c:str, pos):
+def draw(screen:p.Surface,surface:p.Surface, r_or_c:str, pos:np.ndarray):
     if r_or_c.lower() == "c":       
         p.draw.circle(surface,(0,0,0), (32 + (64*pos[1]),32 + (64*pos[0])), DIMENSION*1.5)
     elif r_or_c.lower() == "r":
@@ -171,7 +173,7 @@ def destroyed_p(attacked_p:Piece):
         attacked_p.change_pos(None)
         attacked_p.destroyed = True
                 
-def piece_at_that_pos(coord, w_list, b_list) -> Piece:
+def piece_at_that_pos(coord:np.ndarray, w_list:list[Piece], b_list: list[Piece]) -> Piece:
     piece = None
     for p in (w_list if w_list != None else [])+(b_list if b_list != None else []):
         try:
@@ -185,7 +187,7 @@ def piece_at_that_pos(coord, w_list, b_list) -> Piece:
     else:
         return 0
 
-def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
+def check_line(selected_p: Piece,all_possible: np.ndarray,to: np.ndarray,w_list: list[Piece],b_list: list[Piece]) -> bool:
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1)
     if choosen_dir[0].size == 0:
         return False
@@ -211,7 +213,7 @@ def check_line(selected_p: Piece,all_possible, to,w_list,b_list) -> bool:
             continue
     return True
 
-def movesReturn(piece: Piece):
+def movesReturn(piece: Piece)-> list[np.ndarray]:
     if piece == False or piece.isDestroyed():
         return 
     p_info = piece.get_info()
@@ -240,7 +242,7 @@ def movesReturn(piece: Piece):
         all_possible = p_pos + np.expand_dims(p_info["moves"],axis=1)*np.arange(1,8).reshape(7,1)*p_colour
         return all_possible,None
     
-def castle_checker(king: Piece, to: np.array, White_pList, Black_pList) -> bool:
+def castle_checker(king: Piece, to: np.ndarray, White_pList: list[Piece], Black_pList: list[Piece]) -> bool:
     currently_checked = check(king,None,White_pList,Black_pList)
     if not king.get_castle() or (currently_checked != False and currently_checked.get_colour() == king.get_colour()):
         return False
@@ -283,7 +285,7 @@ def castle_checker(king: Piece, to: np.array, White_pList, Black_pList) -> bool:
         return False if not_possible else True
     return False
 
-def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_return=False):
+def check(wking: Piece, bking: Piece, White_pList: list[Piece],Black_pList: list[Piece],attacking_p_return:bool=False):
     for king in [wking,bking]:
         if king == None or king.isDestroyed():
             continue
@@ -324,7 +326,7 @@ def check(wking: Piece, bking: Piece, White_pList ,Black_pList, attacking_p_retu
             
     return False
 
-def check_mate(w_king:Piece,b_king:Piece, white_pList, black_pList):
+def check_mate(w_king:Piece,b_king:Piece, white_pList: list[Piece], black_pList: list[Piece]):
     w_check_m = False
     b_check_m = False
     output_arr = []
@@ -390,7 +392,7 @@ def check_mate(w_king:Piece,b_king:Piece, white_pList, black_pList):
     
     return w_check_m,b_check_m
 
-def get_attack_line(king, attacking_piece_moves,p_pos):
+def get_attack_line(king: Piece,attacking_piece_moves: np.ndarray,p_pos: np.ndarray):
     choosen_dir = np.nonzero(((king.get_position() == attacking_piece_moves).all(axis=2))*1)
     if choosen_dir[0].size == 0:
         return np.array([-1,-1])
@@ -399,7 +401,7 @@ def get_attack_line(king, attacking_piece_moves,p_pos):
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
     return attacking_movs
 
-def pawn_promotion(piece:Piece,screen,board,AI=False):
+def pawn_promotion(piece:Piece,screen: p.Surface,board: list[list[str]],AI: bool=False):
     if piece == 0:
         return
     p_pos = piece.get_position()
@@ -460,7 +462,7 @@ def pawn_promotion(piece:Piece,screen,board,AI=False):
                     running = False
                     break
 
-def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
+def move_to_attack_line(piece: Piece, attack_movs: np.ndarray, p_pos_return: bool=False):
     p_movs,all_attack = movesReturn(piece)
     attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
     if piece.get_name() != "p":
@@ -478,7 +480,7 @@ def move_to_attack_line(piece: Piece, attack_movs, p_pos_return=False):
         to = to.reshape((int(to.shape[0]/2),2))
         return to,all_attack if p_pos_return else to
 
-def game_end(case,screen):
+def game_end(case: int,screen: p.Surface):
     game_end_screen = p.Surface((WIDTH,HEIGHT))
     game_end_screen.fill((0,0,0))
     game_end_screen.set_alpha(200)
@@ -491,7 +493,7 @@ def game_end(case,screen):
     screen.blit(text_to_display,(35,100))
     p.display.update()
 
-def draw_check(White_pList, Black_pList, king_array)-> bool:
+def draw_check(White_pList: list[Piece], Black_pList: list[Piece], king_array: list[Piece])-> bool:
     w_has_legal_moves = False
     b_has_legal_moves = False
     for side,P_bool in zip([White_pList,Black_pList],[w_has_legal_moves,b_has_legal_moves]):

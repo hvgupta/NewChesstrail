@@ -19,7 +19,7 @@ def main(fen = ""):
     running = True
     current_turn = c_board.Turn.value
     sqSelected = ()
-    player_click = []
+    player_click:list[tuple[int]] = []
     legal_moves = []
     whiteKing, blackKing = getKing(White_pList, Black_pList)
     selected_p = Piece
@@ -159,8 +159,6 @@ if __name__ == "__main__":
                 elif e.key == p.K_RETURN:
                     running = False
                     break
-                # elif e.key == p.K_v and e.mod & p.KMOD_CTRL:
-                #     input_fen = p.scrap.get(p.SCRAP_TEXT)
                 else:
                     input_fen += e.unicode
         instruction_font = p.font.SysFont("monospace", 29)

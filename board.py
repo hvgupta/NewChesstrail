@@ -5,7 +5,7 @@ class Board():
     defines the board, thought of using FEN string, but didnt find many resources, so it is just a simple array with the first word
     signifying the colour of the piece b= black and w= white, and the next word signfies the piece type so pawn, king etc, same as the Enum file
     """
-    def __init__(self, fen = ""):
+    def __init__(self, fen: str= ""):
         self.board = [[],[],[],[],[],[],[],[]]
         if fen == "":
             self.board = [
@@ -45,7 +45,7 @@ class Board():
         self.board[old_pos[0]][old_pos[1]] = "--"
     
     @staticmethod    # I thought a list of objects would be cool, so here it is 
-    def initialise(board): 
+    def initialise(board: list[list[str]]): 
         blackList = []
         whiteList = []
         for row in range(8):

@@ -2,7 +2,6 @@ import random
 from Helper_func import *
 from board import *
 
-
 def pieces_which_can_move(White_pList,Black_pList, WhiteK, BlackK, colour):
     Piece_can_move = []
     for piece in (White_pList if colour == Colour.w.value else Black_pList):
@@ -16,6 +15,7 @@ def pieces_which_can_move(White_pList,Black_pList, WhiteK, BlackK, colour):
 
 def eval_func(w_allowed_piece_move_array, b_allowed_piece_move_array, White_pList, Black_pList) -> int:
     score = 0
+    piece:Piece
     for piece, moves in b_allowed_piece_move_array:
         for move in moves:
             if piece_at_that_pos(move,White_pList,Black_pList) == 0:
@@ -51,8 +51,6 @@ def AI_logic(White_pList, Black_pList, WhiteK, BlackK, depth, current_turn):
             move_list = np.append(move_list,{"piece": piece, "move": move})
             ScoreList = np.append(ScoreList, score)
         piece.change_pos(old_p)
-    # while ScoreList.size != 3:
-        # ind = np.argpartition(-ScoreList,3)[3*-current_turn:]
     ind = np.argsort(ScoreList)
     if current_turn == Colour.w.value:
         ind = ind[:3]
