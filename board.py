@@ -46,8 +46,8 @@ class Board():
     
     @staticmethod    # I thought a list of objects would be cool, so here it is 
     def initialise(board: list[list[str]]): 
-        blackList = []
-        whiteList = []
+        black_PList = []
+        white_PList = []
         for row in range(8):
             for col in range(8):
                 if board[row][col] == "--":
@@ -56,8 +56,8 @@ class Board():
                 piece_type = getattr(PieceType,board[row][col][1])
                 
                 if colour.value == Colour.w.value:
-                    whiteList.append(Piece(piece_type,np.array((row,col)),colour))
+                    white_PList.append(Piece(piece_type,np.array((row,col)),colour))
                 else:
-                    blackList.append(Piece(piece_type,np.array((row,col)),colour))
+                    black_PList.append(Piece(piece_type,np.array((row,col)),colour))
                     
-        return whiteList, blackList
+        return white_PList, black_PList

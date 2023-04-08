@@ -2,7 +2,7 @@ import random
 from Helper_func import *
 from board import *
 
-def pieces_which_can_move(White_pList,Black_pList, WhiteK, BlackK, colour):
+def pieces_which_can_move(White_pList: list[Piece],Black_pList: list[Piece], WhiteK: Piece, BlackK: Piece, colour: Colour) -> np.ndarray[Piece, np.ndarray]:
     Piece_can_move = []
     for piece in (White_pList if colour == Colour.w.value else Black_pList):
         if piece.isDestroyed():
@@ -13,23 +13,22 @@ def pieces_which_can_move(White_pList,Black_pList, WhiteK, BlackK, colour):
             Piece_can_move.append([piece,legal_moves])
     return np.array(Piece_can_move)
 
-def eval_func(w_allowed_piece_move_array, b_allowed_piece_move_array, White_pList, Black_pList) -> int:
+def eval_func(w_allowed_piece_move_array, b_allowed_piece_move_array, White_pList: list[Piece], Black_pList: list[Piece]) -> int:
     score = 0
     piece:Piece
-    for piece, moves in b_allowed_piece_move_array:
+    for piece, moves in np.concatenate((b_allowed_piece_move_array,w_allowed_piece_move_array),axis=0):
         for move in moves:
-            if piece_at_that_pos(move,White_pList,Black_pList) == 0:
+            PieceAtPos: Piece = piece_at_that_pos(move,White_pList,Black_pList)
+            if PieceAtPos == 0 and piece.get_colour() == Colour.b.value:
                 score += 0.5
-            else:
-                score += piece.get_info()["points"]
-    for piece, moves in w_allowed_piece_move_array:
-        for move in moves:
-            if piece_at_that_pos(move,White_pList,Black_pList) != 0:
-                score -= piece.get_info()["points"]
+            elif piece.get_colour() == Colour.b.value:
+                score += PieceAtPos.get_info()["points"]
+            elif piece.get_colour() == Colour.w.value and PieceAtPos != 0:
+                score -= PieceAtPos.get_info()["points"]
     
     return score
 
-def AI_logic(White_pList, Black_pList, WhiteK, BlackK, depth, current_turn):
+def AI_logic(White_pList: list[Piece], Black_pList: list[Piece], WhiteK: Piece, BlackK: Piece, depth: int, current_turn: Colour):
     if depth == 2:
         return 0
     move_array = pieces_which_can_move(White_pList,Black_pList,WhiteK,BlackK,current_turn)
@@ -56,8 +55,8 @@ def AI_logic(White_pList, Black_pList, WhiteK, BlackK, depth, current_turn):
         ind = ind[:3]
     else:
         ind = ind[-3:]
-    move_list = move_list[ind]
-    ScoreList = ScoreList[ind]
+    move_list: np.ndarray[dict[str, Piece], dict[str,np.ndarray]]= move_list[ind]
+    ScoreList: list[int] = ScoreList[ind]
     for move,Score in zip(move_list, ScoreList):
         any_piece = piece_at_that_pos(move["move"],White_pList, Black_pList)
         old = None
