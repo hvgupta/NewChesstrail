@@ -60,6 +60,7 @@ def main(fen = ""):
             #         player_click.append(tuple(p_move))
             #     else:
             #         game_end(0)
+
             move = move_decider(White_pList,Black_pList, whiteKing, blackKing)
             player_click = [tuple(move["piece"].get_position()),tuple(move["move"])]
             selected_p = piece_at_that_pos(player_click[0],White_pList, Black_pList)
