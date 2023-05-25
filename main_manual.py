@@ -4,7 +4,6 @@ from Helper_func import *
          
 def main(fen = ""):
     # initialising pygame ...
-    p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     
@@ -23,6 +22,8 @@ def main(fen = ""):
     legal_moves = []
     whiteKing, blackKing = getKing(White_pList, Black_pList)
     selected_p = Piece
+    w_checkMated = False
+    b_checkMated = False
     
     def reset(sqSelected,player_click): # resets the sqSelected and player_click
         sqSelected = ()
@@ -52,20 +53,23 @@ def main(fen = ""):
         gameState(screen,c_board.board)
         
         isCheck = check(whiteKing,blackKing,White_pList,Black_pList)
-        w_checkMated,b_checkMated = check_mate(whiteKing,blackKing,White_pList,Black_pList)
+        if isCheck != False:
+            if isCheck.get_colour() == Colour.w.value:
+                w_checkMated = check_mate(isCheck, White_pList, Black_pList)
+            else:
+                b_checkMated = check_mate(isCheck, White_pList, Black_pList)
                 
         if len(player_click) == 1:
-            
             selected_p = piece_at_that_pos(player_click[0],White_pList,Black_pList) 
-            if selected_p == 0 or selected_p.get_colour() != current_turn:
+            if selected_p == EMPTY_POS or selected_p.get_colour() != current_turn:
                 sqSelected,player_click=reset(sqSelected,player_click) # resets player click if the clicked tile is empty or of the wrong colour
                 continue
             
             all_possible, all_attack = movesReturn(selected_p) #gives all the moves possible legal and illegal
             #shows those positions accoring to all the legal moves
-            if selected_p != 0 and selected_p.get_name() != "p":
+            if selected_p.get_name() != "p":
                 legal_moves = position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing]) 
-            elif selected_p != 0 and selected_p.get_name() == "p":
+            elif selected_p.get_name() == "p":
                 legal_moves = position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing],all_attack)
         
         elif len(player_click) == 2:
@@ -73,6 +77,7 @@ def main(fen = ""):
             if not (legal_moves.size != 0 and (legal_moves == player_click[1]).all(axis=1).any()):
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
+            
             attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved 
             
             if selected_p.get_name() == "p" and abs(player_click[0][0] - player_click[1][0]) == 2:
@@ -90,14 +95,14 @@ def main(fen = ""):
                 c_board.move_piece(selected_p,np.array(np.array(player_click[1])))
                 c_board.move_piece(rook,rook_to_pos)
 
-            elif attacked_p == 0: #if the piece is moving to an empty space
+            elif attacked_p == EMPTY_POS: #if the piece is moving to an empty space
                 c_board.move_piece(selected_p, np.array(sqSelected))
                 check_for_en_passant = piece_at_that_pos(np.array([sqSelected]) - np.array([selected_p.get_colour(),0]), White_pList, Black_pList)
                 if check_for_en_passant != 0 and selected_p.get_name() == "p":
                     destroyed_p(check_for_en_passant)
                     c_board.move_piece("--",( np.array([sqSelected]) - np.array([selected_p.get_colour(),0])).reshape((2)))
 
-            elif attacked_p != 0:# if the piece is moving to a space which is occupied by the opposite team
+            elif attacked_p != EMPTY_POS:# if the piece is moving to a space which is occupied by the opposite team
                 c_board.move_piece(selected_p,np.array(sqSelected))
                 destroyed_p(attacked_p)
             
@@ -115,7 +120,7 @@ def main(fen = ""):
                 p.transform.scale(
                     p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE)
                 )
-        if draw_check(White_pList,Black_pList,[whiteKing,blackKing]):
+        elif draw_check(White_pList,Black_pList,[whiteKing,blackKing]):
             game_end(0,screen)
             running = False
             break

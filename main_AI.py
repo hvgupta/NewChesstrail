@@ -3,8 +3,6 @@ from board import *
 from AI import *
 
 def main(fen = ""):
-    
-    p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     c_board = Board()
@@ -24,6 +22,8 @@ def main(fen = ""):
     HUMAN = Colour.w.value
     AI = Colour.b.value
     selected_p = Piece
+    w_checkMated = False
+    b_checkMated = False
     
     while running:
         
@@ -46,42 +46,35 @@ def main(fen = ""):
                         player_click.append(sqSelected)
             
         elif current_turn == AI:
-            # print(fen)
-            # # print(fen2move(fen))
-            # if player_click_index == 0:
-            #     selected_p,p_move = check_mov_chooser(whiteKing,blackKing,White_pList,Black_pList)
-            #     try:
-            #         print(selected_p.get_name(),selected_p.get_position(),p_move)
-            #     except:
-            #         pass
-            #     if selected_p != None:
-            #         all_possible,all_attack = movesReturn(selected_p)
-            #         player_click.append(tuple(selected_p.get_position()))
-            #         player_click.append(tuple(p_move))
-            #     else:
-            #         game_end(0)
 
             move = move_decider(White_pList,Black_pList, whiteKing, blackKing)
             player_click = [tuple(move["piece"].get_position()),tuple(move["move"])]
             selected_p = piece_at_that_pos(player_click[0],White_pList, Black_pList)
             sqSelected = tuple(move["move"])
-
+            print("{piece} : {From} -> {to}".format(piece= selected_p.get_name(), From= player_click[0], to= player_click[1]))
+        
         gameState(screen,c_board.board)
         isCheck = check(whiteKing,blackKing,White_pList,Black_pList)
-        w_checkMated,b_checkMated = check_mate(whiteKing,blackKing,White_pList,Black_pList)
+        if isCheck != False:
+            if isCheck.get_colour() == Colour.w.value:
+                w_checkMated = check_mate(isCheck, White_pList, Black_pList)
+            else:
+                b_checkMated = check_mate(isCheck, White_pList, Black_pList)
                 
         if len(player_click) == 1:
             
             selected_p = piece_at_that_pos(player_click[0],White_pList,Black_pList) 
-            if selected_p == 0 or selected_p.get_colour() != current_turn:
+            if selected_p == EMPTY_POS or selected_p.get_colour() != current_turn:
                 sqSelected,player_click=reset(sqSelected,player_click) # resets player click if the clicked tile is empty or of the wrong colour
                 continue
             
             all_possible, all_attack = movesReturn(selected_p) #gives all the moves possible legal and illegal
             #shows those positions accoring to all the legal moves
-            if selected_p != 0 and selected_p.get_name() != "p":
+            if selected_p == EMPTY_POS:
+                continue
+            elif selected_p.get_name() != "p":
                 legal_moves = position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing]) 
-            elif selected_p != 0 and selected_p.get_name() == "p":
+            else:
                 legal_moves = position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing],all_attack)
         
         elif len(player_click) == 2:
@@ -90,7 +83,6 @@ def main(fen = ""):
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
             attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved 
-            
             if selected_p.get_name() == "p" and abs(player_click[0][0] - player_click[1][0]) == 2:
                 selected_p.change_en_passant(True) 
             elif selected_p.get_name() == "p" and abs(player_click[0][0] - player_click[1][0]) == 1:
@@ -106,14 +98,14 @@ def main(fen = ""):
                 c_board.move_piece(selected_p,np.array(np.array(player_click[1])))
                 c_board.move_piece(rook,rook_to_pos)
 
-            elif attacked_p == 0: #if the piece is moving to an empty space
+            elif attacked_p == EMPTY_POS: #if the piece is moving to an empty space
                 c_board.move_piece(selected_p, np.array(sqSelected))
                 check_for_en_passant = piece_at_that_pos(np.array([sqSelected]) - np.array([selected_p.get_colour(),0]), White_pList, Black_pList)
                 if check_for_en_passant != 0 and selected_p.get_name() == "p":
                     destroyed_p(check_for_en_passant)
                     c_board.move_piece("--",( np.array([sqSelected]) - np.array([selected_p.get_colour(),0])).reshape((2)))
 
-            elif attacked_p != 0:# if the piece is moving to a space which is occupied by the opposite team
+            elif attacked_p != EMPTY_POS:# if the piece is moving to a space which is occupied by the opposite team
                 c_board.move_piece(selected_p,np.array(sqSelected))
                 destroyed_p(attacked_p)
             
@@ -192,4 +184,5 @@ if __name__ == "__main__":
         start_screen.blit(instruction3, (0,130))
         p.display.update()
         
+
     main(input_fen)
