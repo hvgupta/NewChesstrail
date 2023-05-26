@@ -4,3 +4,5 @@
 /chess_pngs.zip
 __pycache__/
 /keepold.txt
+.vscode/
+.venc/

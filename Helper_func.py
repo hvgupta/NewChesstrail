@@ -9,7 +9,7 @@ SQ_SIZE = HEIGHT//DIMENSION
 IMAGES = {}
 EMPTY_POS = 0
 
-def getKing(white_pList:list[Piece],black_pList:list[Piece]):
+def getKing(white_pList:list[Piece],black_pList:list[Piece]) -> tuple(Piece):
     white_king = ''
     black_king = ''
     for piece in white_pList:
@@ -38,7 +38,7 @@ def gameState(screen: p.Surface, board:list[list[str]]): #draws the chess board 
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(column*SQ_SIZE,row*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def position_shower(all_possible:np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], screen: p.Surface, selected_p: Piece, king_array: list[Piece],all_attack:np.ndarray = None, return_mov:bool = False):
+def position_shower(all_possible:np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], screen: p.Surface, selected_p: Piece, king_array: list[Piece],all_attack:np.ndarray = None, return_mov:bool = False) -> np.ndarray:
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     legal_moves = []
     attacking_p_movs = []

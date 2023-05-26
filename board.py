@@ -61,3 +61,17 @@ class Board():
                     black_PList.append(Piece(piece_type,np.array((row,col)),colour))
                     
         return white_PList, black_PList
+    
+    @staticmethod
+    def encodedState(White_pList: list[Piece], Black_pList: list[Piece]) -> np.ndarray:
+        encoded_array = np.zeros((3,8,8)) # the 3 8x8 arrays which contain the information about the point of the piece and their colour denoted by the sign 
+        for piece in White_pList:
+            if piece.isDestroyed(): continue
+            encoded_array[0, tuple(piece.get_position())] = piece.get_info()["points"]
+        for piece in Black_pList:
+            if piece.isDestroyed(): continue
+            encoded_array[1, tuple(piece.get_position())] = piece.get_info()["points"]
+        
+        encoded_array[2] = (encoded_array[0] == 0) & (encoded_array[1] == 0)
+        
+        return encoded_array

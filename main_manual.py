@@ -13,7 +13,7 @@ def main(fen = ""):
     loadImages()
     
     #declaring variables for later use
-    running = True
+    running: bool = True
     current_turn = c_board.Turn.value
     sqSelected = ()
     player_click:list[tuple[int]] = []
