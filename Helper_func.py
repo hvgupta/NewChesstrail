@@ -9,7 +9,7 @@ SQ_SIZE = HEIGHT//DIMENSION
 IMAGES = {}
 EMPTY_POS = 0
 
-def getKing(white_pList:list[Piece],black_pList:list[Piece]) -> tuple(Piece):
+def getKing(white_pList:list[Piece],black_pList:list[Piece]) -> tuple[Piece]:
     white_king = ''
     black_king = ''
     for piece in white_pList:
@@ -38,7 +38,7 @@ def gameState(screen: p.Surface, board:list[list[str]]): #draws the chess board 
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(column*SQ_SIZE,row*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
-def position_shower(all_possible:np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], screen: p.Surface, selected_p: Piece, king_array: list[Piece],all_attack:np.ndarray = None, return_mov:bool = False) -> np.ndarray:
+def returnValidPos(all_possible:np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], screen: p.Surface, selected_p: Piece, king_array: list[Piece],all_attack:np.ndarray = None, return_mov:bool = False) -> np.ndarray:
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     legal_moves = []
     attacking_p_movs = []
@@ -267,31 +267,41 @@ def check(wking: Piece, bking: Piece, White_pList: list[Piece],Black_pList: list
             continue
         king_movs = king.get_info()["moves"]
         k_pos = king.get_position()
+        
         for mov in king_movs: # iterates through king's basic moves
             mov_num = mov*np.arange(1,8).reshape(7,1) + k_pos # from king's perspective the move is scaled to 8
             mov_num = mov_num[(np.max(mov_num,axis=1)<8) & (np.min(mov_num,axis=1)>-1)] # remove the position checks beyond the board
             for each in mov_num: # iterates through the positions to check
                 output = piece_at_that_pos(each,White_pList,Black_pList)
+                
                 if output == EMPTY_POS:
                     continue
+                
                 elif output.get_colour() == king.get_colour(): # when output is not empty position and output is of the same colour
                     break
                 elif output.get_name() == "p": # output != EMPTY POS and colour NOT same
                     index_array = (each == mov_num).all(axis=1).nonzero()        
+                    
                     if ((np.array([mov[0]*king.get_colour(),mov[1]]) == output.get_info()["attack"]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
                         king.change_pos(k_pos) # this is for resetting the king
-                        return king if not attacking_p_return else output # sees the pawn can check the king
+                        return king if not attacking_p_return else output # the pawn can check the king
+                    
                     else:
-                        break # breaks if the pawn cannot, sicne, nothing else can check the king from that direction 
+                        break # breaks if the pawn cannot check, since, nothing else can check the king from that direction 
+                    
                 elif ((mov == output.get_info()["moves"]).all(axis=1)).any(): # output != BLANK_POS and colour NOT same and not Pawn
+                    
                     if output.get_name() != "K": # when attacking piece is not king
                         king.change_pos(k_pos) # this is for resetting the king
                         return king if not attacking_p_return else output
+                    
                     if np.where((each == mov_num).all(axis=1) == True)[0] == 0: 
                         return king if not attacking_p_return else output
                     break
+                
         K_horse_check = PieceType.N.value["moves"]+k_pos # checks if the king can be checked by a horse
         K_horse_check = K_horse_check[(np.max(K_horse_check,axis=1)<8) & (np.min(K_horse_check,axis=1)>-1)]
+        
         for movs in K_horse_check:
             output = piece_at_that_pos(movs,White_pList,Black_pList)
             if output != EMPTY_POS  and output.get_info() == PieceType.N.value and output.get_colour() != king.get_colour():
@@ -300,7 +310,7 @@ def check(wking: Piece, bking: Piece, White_pList: list[Piece],Black_pList: list
             
     return False
 
-def check_mate(king:Piece,white_pList: list[Piece], black_pList: list[Piece]):
+def check_mate(king:Piece,white_pList: list[Piece], black_pList: list[Piece]) -> bool:
     check_m = False
     output_arr = []
     # if the king is in check, then can the king do something to aviod the check
@@ -363,7 +373,7 @@ def get_attack_line(king: Piece,attacking_piece_moves: np.ndarray,p_pos: np.ndar
     attacking_movs = attacking_movs.reshape((int(attacking_movs.shape[0]/2),2))
     return attacking_movs
 
-def pawn_promotion(piece:Piece,screen: p.Surface,board: list[list[str]],AI: bool=False):
+def pawn_promotion(piece:Piece,screen: p.Surface,board: list[list[str]]):
     if piece == EMPTY_POS:
         return
     p_pos = piece.get_position()
@@ -468,12 +478,12 @@ def draw_check(White_pList: list[Piece], Black_pList: list[Piece], king_array: l
                 all_moves,all_attack = movesReturn(piece)
                 if type(all_moves) == type(None):
                     continue
-                legal_moves = position_shower(all_moves.reshape((all_moves.shape[1],all_moves.shape[0],2)),White_pList,Black_pList,None, piece,king_array,all_attack,True)
+                legal_moves = returnValidPos(all_moves.reshape((all_moves.shape[1],all_moves.shape[0],2)),White_pList,Black_pList,None, piece,king_array,all_attack,True)
             else:
                 all_moves,all_attack = movesReturn(piece)
                 if type(all_moves) == type(None):
                     continue
-                legal_moves = position_shower(all_moves,White_pList,Black_pList,None, piece,king_array,all_attack,True)
+                legal_moves = returnValidPos(all_moves,White_pList,Black_pList,None, piece,king_array,all_attack,True)
             if legal_moves.size > 0:
                 P_bool = True
                 break

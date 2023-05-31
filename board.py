@@ -2,8 +2,7 @@ from Piece import *
 
 class Board(): 
     """ 
-    defines the board, thought of using FEN string, but didnt find many resources, so it is just a simple array with the first word
-    signifying the colour of the piece b= black and w= white, and the next word signfies the piece type so pawn, king etc, same as the Enum file
+    defines the board according to the fen string inputted. An empty fen string would initalise the board in the deafult case
     """
     def __init__(self, fen: str= ""):
         self.board = [[],[],[],[],[],[],[],[]]

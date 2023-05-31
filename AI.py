@@ -1,11 +1,14 @@
 from Helper_func import *
 from board import *
 
+# implement array which is changed only when needed, no need the redundancy
+
 c:dict = {'C':2, "numberOfRuns": 100}
 
 DEPTH = 3
 
-def original_state(White_pList: list[Piece],Black_pList: list[Piece], WhiteK: Piece, BlackK: Piece, colour: Colour):
+def original_state(White_pList: list[Piece],Black_pList: list[Piece], WhiteK: Piece, BlackK: Piece, colour: Colour)-> tuple:
+    # initialise the Piece_can_move and moves (based on the each turn)
     Piece_can_move = []
     moves = []
     colour_choosen_list = White_pList if colour == Colour.w.value else Black_pList
@@ -13,41 +16,110 @@ def original_state(White_pList: list[Piece],Black_pList: list[Piece], WhiteK: Pi
         if piece.isDestroyed():
             continue
         all_moves,all_attack = movesReturn(piece)   
-        legal_moves = position_shower(all_moves,White_pList,Black_pList,None,piece,[WhiteK,BlackK],all_attack if piece.get_name() == "p" else None,True)
+        legal_moves = returnValidPos(all_moves,White_pList,Black_pList,None,piece,[WhiteK,BlackK],all_attack if piece.get_name() == "p" else None,True)
         if legal_moves.size > 0:
             Piece_can_move.append(piece)
             moves.append(legal_moves)
     return Piece_can_move, moves
 
-def PieceArray(P_list: list[Piece]):
+def PieceArray(P_list: list[Piece]): # returns encoded array of that colour (Piece list has the colour indication)
     informationArray = np.zeros((8,8))
     for piece in P_list:
         if piece.isDestroyed(): continue
         informationArray[tuple(piece.get_position())] = piece.get_info()["points"]
     return informationArray
 
-def multipleCheck(diff_array):
-    all_moves_to_consider = np.concatenate((PieceType.K.value["moves"], PieceType.N.value["moves"]))
-    shape = all_moves_to_consider.shape
-    all_moves_to_consider = np.broadcast_to(all_moves_to_consider, (shape[0], diff_array.shape[0],2))
+"""
+how to update
+I) loop for initial position 
+    1) check if the position is not empty, otherwise continue
+    2) check if it is not a pawn
+        i) only update if the basic move condition is satisfied
+    3) check colour
+        if same colour (if statement implies can only be pawn) 
+        i) only update when move condition is satisfied
+        if opposite colour
+        ii) update when en passant, attack or move condition is satisfied
+    4) knight loop
+        i) if it is a knight, then update
+        
+II) loop for final position
+    the same loop as (I) but also make sure of duplicates 
+"""
+
+def PieceUpdate(selected_p: Piece, move: np.ndarray, white_pList: list[Piece], black_pList: list[Piece])->list:
+    pieceToUpdate = []
+    direction_move = PieceType.K.value["moves"]
+    direction_move = np.expand_dims(direction_move,axis=1)
+    multiple = np.arange(1,8).reshape((8,1))
     
-def pieces_which_can_move(White_pList: list[Piece],Black_pList: list[Piece], WhiteK: Piece, BlackK: Piece, colour: Colour, piece: Piece, original: np.ndarray):
-    choosen_list = White_pList if colour == Colour.w.value else Black_pList
-    p_pos = np.array([])
-    for choosen_piece in choosen_list:
-        p_pos = np.concatenate((p_pos, choosen_piece.get_position()))
-    p_pos = p_pos.reshape((int(p_pos.size/2),2))
-    p_pos= p_pos.astype(int)
-    diff_from_original = p_pos - original
-    diff_from_new = p_pos - piece.get_position()
-    all_moves_to_consider = np.concatenate((PieceType.K.value["moves"], PieceType.N.value["moves"]))
-    # all_moves_to_consider = np.expand_dims(all_moves_to_consider,axis=1)
-    shape = all_moves_to_consider.shape
-    test = np.broadcast_to(all_moves_to_consider, (shape[0],diff_from_original.shape[0],2))
+    p_old = selected_p.get_position()
+    for case in [selected_p.get_position(), move]: # 2 cases to check for pieces to update, at the pos of the piece and at the position the piece is being moved to
+        selected_p.change_pos(case) # move the piece to that position 
+        moves_to_consider = (direction_move*multiple) + case # all the 8 directions check
+        knightMoves = PieceType.N.value["moves"] + case # knight check
+        knightMoves = knightMoves[(np.max(knightMoves,axis=1)<8) & (np.min(knightMoves,axis=1)>-1)] # since there are no multiples, knight moves can already be simplified 
+        
+        for moves in moves_to_consider: # first the 8 directions test 
+            moving = moves[(np.max(moves,axis=1)<8) & (np.min(moves,axis=1)>-1)] # remove the coords which are outside the board
+            for move in moving:
+                
+                whichPiece = piece_at_that_pos(move, white_pList, black_pList)
+                if whichPiece == EMPTY_POS: # if the piece is empty then continue
+                    continue
+                
+                elif whichPiece.get_name() != "p":
+                    if (((moves[0]-case) == whichPiece.get_info()["moves"]).all(axis=1)).any(): # if the piece has the same basic movement as how it was approached, (can the piece move the in the same direction as the base move)
+                        pieceToUpdate.append(whichPiece)
+                
+                elif whichPiece.get_colour() == selected_p.get_colour(): # if the piece is a pawn and of the same colour
+                    if ((-1*(moves[0]-case) == whichPiece.get_info()["moves"]).all(axis=1)).any(): # only if the movement is in the same direction
+                        pieceToUpdate.append(whichPiece)
+                
+                else: # if a pawn and not the same colour
+                    if ((-1*(moves[0]-case) == whichPiece.get_info()["moves"]).all(axis=1)).any(): # check if the way is it approached is opposite to pawn's moves
+                        pieceToUpdate.append(whichPiece)
+                    elif ((-1*(moves[0]-case) == whichPiece.get_info()["attack"]).all(axis=1)).any(): # check if the way it is approached is opposite to pawn's attack
+                        pieceToUpdate.append(whichPiece)
+                    if (((moves[0]-case) == [ [0,1], [0,-1] ]).all(axis=1)).any(): # check for en PAAAAAASSSSSSSSSSSSSAAAAAAAAAAAAAANNNNNNNNTTTT
+                        pieceToUpdate.append(whichPiece)
+                break
+        
+        for Nmoves in knightMoves: # check for knight moves
+            whichPiece = piece_at_that_pos(Nmoves, white_pList, black_pList)
+            if whichPiece.get_name() == "N":
+                pieceToUpdate.append(whichPiece)
     
-    divided_array = (np.dot(diff_from_original, all_moves_to_consider)*np.dot(diff_from_original, all_moves_to_consider) == np.dot(diff_from_original, diff_from_original)* np.dot(all_moves_to_consider, all_moves_to_consider))
-    divided_array = divided_array.astype(int)
-    divided_array
+    selected_p.change_pos(p_old)
+    
+    return list(dict.fromkeys(pieceToUpdate)) # remove duplicates and return
+    
+def pieces_which_can_move(White_pList: list[Piece],Black_pList: list[Piece], piece: Piece, whiteK:Piece, blackK: Piece, original: np.ndarray, pieceCanMove:list, moves:list):
+    pieceToUpdate = PieceUpdate(piece,original,White_pList,Black_pList)
+    for piece in pieceToUpdate:
+        if piece in pieceCanMove:
+            piece_index = pieceCanMove.index(piece)
+            all_possible, all_attack = movesReturn(piece)
+            moves[piece_index] = returnValidPos(all_possible,White_pList, Black_pList, None, piece, [whiteK, blackK], all_attack if piece.get_name() == "p" else None, True)
+        else:
+            pieceCanMove.append(piece)
+            moves.append(returnValidPos(all_possible,White_pList, Black_pList, None, piece, [whiteK, blackK], all_attack if piece.get_name() == "p" else None, True))
+    # choosen_list = White_pList if colour == Colour.w.value else Black_pList
+    # p_pos = np.array([])
+    # for choosen_piece in choosen_list:
+    #     p_pos = np.concatenate((p_pos, choosen_piece.get_position()))
+    # p_pos = p_pos.reshape((int(p_pos.size/2),2))
+    # p_pos= p_pos.astype(int)
+    # diff_from_original = p_pos - original
+    # diff_from_new = p_pos - piece.get_position()
+    # all_moves_to_consider = np.concatenate((PieceType.K.value["moves"], PieceType.N.value["moves"]))
+    # # all_moves_to_consider = np.expand_dims(all_moves_to_consider,axis=1)
+    # shape = all_moves_to_consider.shape
+    # test = np.broadcast_to(all_moves_to_consider, (shape[0],diff_from_original.shape[0],2))
+    
+    # divided_array = (np.dot(diff_from_original, all_moves_to_consider)*np.dot(diff_from_original, all_moves_to_consider) == np.dot(diff_from_original, diff_from_original)* np.dot(all_moves_to_consider, all_moves_to_consider))
+    # divided_array = divided_array.astype(int)
+    # divided_array
     
     # colour_choosen_list = White_pList if colour == Colour.w.value else Black_pList
     # for piece in colour_choosen_list:

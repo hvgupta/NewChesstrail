@@ -57,9 +57,9 @@ def first_click(White_pList: list[Piece], Black_pList: list[Piece], current_turn
     all_possible, all_attack = movesReturn(selected_p) #gives all the moves possible legal and illegal
     #shows those positions accoring to all the legal moves
     if selected_p.get_name() != "p":
-        legal_moves = position_shower(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing]) 
+        legal_moves = returnValidPos(all_possible,White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing]) 
     elif selected_p.get_name() == "p":
-        legal_moves = position_shower(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing],all_attack)
+        legal_moves = returnValidPos(all_possible.reshape((all_possible.shape[1],all_possible.shape[0],2)),White_pList,Black_pList,screen,selected_p,[whiteKing,blackKing],all_attack)
     
     return True, selected_p ,legal_moves
 

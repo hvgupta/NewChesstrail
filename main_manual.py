@@ -72,7 +72,6 @@ def main(fen = ""):
             
             if second_click(c_board, legal_moves, White_pList, Black_pList, selected_p,sqSelected,player_click):
                 
-                isCheck = check(whiteKing,blackKing,White_pList,Black_pList) #checks if the moves result into the self king being checked  
                 gameState(screen,c_board.board)
                 selected_p.change_castle()
                 current_turn *= -1
