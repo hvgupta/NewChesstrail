@@ -12,7 +12,7 @@ class Game():
         self.board = copy.deepcopy(board)
         self.turn = turn
         self.validMovesNum = 0
-        self.allowedActions:tuple = self.get_allowedMoves()
+        self.allowedPiece,self.allowedActions = self.get_allowedMoves()
 
     def get_encodedState(self) -> np.ndarray:
         encoded_array = np.zeros((3,8,8)) # the 3 8x8 arrays which contain the information about the point of the piece and their colour denoted by the sign 
@@ -28,15 +28,39 @@ class Game():
         return encoded_array
     
     def move_piece(self, actionNum: int)->tuple:
-        piece:Piece = self.allowedActions[0][(actionNum//10)-1]
-        action = self.allowedActions[1][(actionNum//10)-1][actionNum%10]
+        '''
+        1234
+        id: 12
+        moveType: 3
+        multiple: 4
+        get id by //100, then iterate through the piece list to get id
+        then %100 to get moveType and multiple
+            //10 to get moveType 
+            %10 get multiple
+        '''
+        id: int = actionNum//100
+        moveAndmultiple: int = actionNum%100
+        selected_piece: Piece = None
+        for piece in self.black_pList + self.white_pList:
+            if piece.id == id:
+                selected_piece = piece
+                break
+        
+        moves: np.ndarray = selected_piece.get_info()["moves"]
+        moves = np.expand_dims(moves, axis=1)
+        multiple : np.ndarray = np.arange(1,8).reshape((7,1))
+        moves = moves*multiple
+        move = moves[moveAndmultiple//10, moveAndmultiple%10, :]
         newWhite_pList = copy.deepcopy(self.white_pList)
         newBlack_pList = copy.deepcopy(self.black_pList)
-        newPiece = piece_at_that_pos(piece.get_position(),newWhite_pList,newBlack_pList)
-        self.board.move_piece(newPiece,action)
+        newPiece = piece_at_that_pos(selected_piece.get_position(),newWhite_pList,newBlack_pList)
+        self.board.move_piece(newPiece,move)
         return newWhite_pList,newBlack_pList
     
-    def get_allowedMoves(self)->list:
+    def get_allowedMoves(self)->tuple[list[Piece], list[np.ndarray]]:
+        '''
+        gives the piece and the moves which can be moved in the current board state
+        '''
         # initialise the Piece_can_move and moves (based on the each turn)
         self.validMovesNum = 0
         Piece_can_move: list[Piece] = []
@@ -54,11 +78,26 @@ class Game():
         return Piece_can_move, moves   
         
     def get_validMoves(self)-> tuple:
-        moves:list = self.allowedActions[1]
+        '''
+        how to define action?
+        id * 100 {could be between 0:31}
+        moveType: {U: 0, UR: 1, R: 2, DR: 3, D: 4, DL: 5, L: 6, UL: 7}*10
+        multiple {1:8}*1
+        therefore a 4 digit number
+        '''
         indices = []
-        firstDnums = list(range(0, len(moves)))
-        for n in firstDnums:
-            indices += list(range(n*10,n*10+len(moves[n-1])))   
+        for index in range(len(self.validMovesNum)):
+            piece = self.allowedPiece[index]
+            action = piece.id*100
+            mov:np.ndarray = self.allowedActions[index] - piece.get_position()
+            direction_move = np.expand_dims(piece.get_info()["moves"],axis=1)
+            multiple = np.arange(1,8).reshape((7,1))
+            direction_move = direction_move*multiple
+            mov = np.reshape(mov, (mov.shape[0], 1,1, mov.shape[1]))
+            truth = (direction_move == mov).all(axis= 3)
+            data = np.where(truth)
+            actions = data[1]*10 + data[2] + action
+            indices += actions.tolist()  
         
         return indices  
     
