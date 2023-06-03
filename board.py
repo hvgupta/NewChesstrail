@@ -54,10 +54,14 @@ class Board():
                 colour = getattr(Colour,board[row][col][0])
                 piece_type = getattr(PieceType,board[row][col][1])
                 
+                Id: int = 0
+                
                 if colour.value == Colour.w.value:
-                    white_PList.append(Piece(piece_type,np.array((row,col)),colour))
+                    white_PList.append(Piece(piece_type,np.array((row,col)),colour), Id)
                 else:
-                    black_PList.append(Piece(piece_type,np.array((row,col)),colour))
+                    black_PList.append(Piece(piece_type,np.array((row,col)),colour), Id)
+                
+                Id+=1
                     
         return white_PList, black_PList
     

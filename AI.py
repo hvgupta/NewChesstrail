@@ -51,7 +51,7 @@ def PieceUpdate(selected_p: Piece, move: np.ndarray, white_pList: list[Piece], b
     pieceToUpdate = []
     direction_move = PieceType.K.value["moves"]
     direction_move = np.expand_dims(direction_move,axis=1)
-    multiple = np.arange(1,8).reshape((8,1))
+    multiple = np.arange(1,8).reshape((7,1))
     
     p_old = selected_p.get_position()
     for case in [selected_p.get_position(), move]: # 2 cases to check for pieces to update, at the pos of the piece and at the position the piece is being moved to
