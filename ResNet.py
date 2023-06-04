@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from game import *
 
 COLUMN = 8
 WIDTH = 8
 
 class ResNet(nn.Module):
-    def __init__(self, numResBlocks, numHidden, device) -> None:
+    def __init__(self, game:Game, numResBlocks, numHidden, device) -> None:
         super().__init__()
         
         self.device = device
@@ -25,7 +26,7 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(32 * COLUMN * WIDTH, COLUMN*WIDTH)
+            nn.Linear(32 * COLUMN * WIDTH, game.validMovesNum)
         ) 
         
         self.valueHead = nn.Sequential(
@@ -33,7 +34,7 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(8),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(8*WIDTH*COLUMN, 1),
+            nn.Linear(700, 1),
             nn.Tanh()
         )
         self.to(device)
