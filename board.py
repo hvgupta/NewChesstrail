@@ -57,9 +57,9 @@ class Board():
                 Id: int = 0
                 
                 if colour.value == Colour.w.value:
-                    white_PList.append(Piece(piece_type,np.array((row,col)),colour), Id)
+                    white_PList.append(Piece(piece_type,np.array((row,col)),colour,Id))
                 else:
-                    black_PList.append(Piece(piece_type,np.array((row,col)),colour), Id)
+                    black_PList.append(Piece(piece_type,np.array((row,col)),colour,Id))
                 
                 Id+=1
                     

@@ -67,7 +67,7 @@ def second_click(c_board:Board,legal_moves: np.ndarray, White_pList: list[Piece]
     if not (legal_moves.size != 0 and (legal_moves == player_click[1]).all(axis=1).any()):
         return 0
             
-    attacked_p = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved 
+    attacked_p: Piece = piece_at_that_pos(player_click[1],White_pList,Black_pList) #gives the positon information for the position being moved 
     
     if selected_p.get_name() == "p" and abs(player_click[0][0] - player_click[1][0]) == 2:
         selected_p.change_en_passant(True) 

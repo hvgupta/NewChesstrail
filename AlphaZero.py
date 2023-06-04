@@ -32,7 +32,7 @@ class AlphaZero():
             if is_terminal:
                 returnMemory = []
                 for hist_neutral_state, hist_action_probs, hist_player in memory:
-                    hist_outcome = value if hist_player == player else self.game.get_opponent_value(value)
+                    hist_outcome = value if hist_player == player else -value
                     returnMemory.append((
                         self.game.get_encodedState(hist_neutral_state),
                         hist_action_probs,

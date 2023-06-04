@@ -7,6 +7,8 @@ def main(fen = ""):
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     c_board = Board()
+    White_pList: list[Piece]
+    Black_pList: list[Piece]
     White_pList, Black_pList = c_board.initialise(c_board.board)
     loadImages()
     running = True
@@ -26,9 +28,23 @@ def main(fen = ""):
     w_checkMated = False
     b_checkMated = False
     game : Game = Game(White_pList, Black_pList,whiteKing, blackKing,Colour.w.value,c_board)
-    model: ResNet = ResNet(game,4,64)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model: ResNet = ResNet(game,20,200, device)
+    
     model.eval()
-    args = {'C':2, 'num_searches': 1000}
+    args = {
+        'C': 2,
+        'num_searches': 600,
+        'num_iterations': 8,
+        'num_selfPlay_iterations': 500,
+        'num_parallel_games': 100,
+        'num_epochs': 4,
+        'batch_size': 128,
+        'temperature': 1.25,
+        'dirichlet_epsilon': 0.25,
+        'dirichlet_alpha': 0.3
+    }
+
     mcts: MCTS = MCTS(game,args)
     
     while running:
@@ -54,11 +70,13 @@ def main(fen = ""):
         elif current_turn == AI:
             
             mcts_prob = mcts.search()
+            move = np.argmax(mcts_prob)
+            White_pList, Black_pList = game.move_piece(move)
             # move = move_decider(White_pList,Black_pList, whiteKing, blackKing)
             # player_click = [tuple(move["piece"].get_position()),tuple(move["move"])]
             # selected_p = piece_at_that_pos(player_click[0],White_pList, Black_pList)
             # sqSelected = tuple(move["move"])
-            print("{piece} : {From} -> {to}".format(piece= selected_p.get_name(), From= player_click[0], to= player_click[1]))
+            #print("{piece} : {From} -> {to}".format(piece= selected_p.get_name(), From= player_click[0], to= player_click[1]))
         
         gameState(screen,c_board.board)
         isCheck = check(whiteKing,blackKing,White_pList,Black_pList) # checks if a king is checked
