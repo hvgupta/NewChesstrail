@@ -1,5 +1,7 @@
 from click_handle import *
 from AI import *
+from ResNet import *
+from MCTS import *
 
 def main(fen = ""):
     screen = p.display.set_mode((WIDTH,HEIGHT))
@@ -23,6 +25,11 @@ def main(fen = ""):
     selected_p = Piece
     w_checkMated = False
     b_checkMated = False
+    game : Game = Game(White_pList, Black_pList,whiteKing, blackKing,Colour.w.value,c_board)
+    model: ResNet = ResNet(game,4,64)
+    model.eval()
+    args = {'C':2, 'num_searches': 1000}
+    mcts: MCTS = MCTS(game,args)
     
     while running:
         
@@ -45,11 +52,12 @@ def main(fen = ""):
                         player_click.append(sqSelected)
             
         elif current_turn == AI:
-
-            move = move_decider(White_pList,Black_pList, whiteKing, blackKing)
-            player_click = [tuple(move["piece"].get_position()),tuple(move["move"])]
-            selected_p = piece_at_that_pos(player_click[0],White_pList, Black_pList)
-            sqSelected = tuple(move["move"])
+            
+            mcts_prob = mcts.search()
+            # move = move_decider(White_pList,Black_pList, whiteKing, blackKing)
+            # player_click = [tuple(move["piece"].get_position()),tuple(move["move"])]
+            # selected_p = piece_at_that_pos(player_click[0],White_pList, Black_pList)
+            # sqSelected = tuple(move["move"])
             print("{piece} : {From} -> {to}".format(piece= selected_p.get_name(), From= player_click[0], to= player_click[1]))
         
         gameState(screen,c_board.board)

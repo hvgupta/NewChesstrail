@@ -45,12 +45,16 @@ class Game():
             if piece.id == id:
                 selected_piece = piece
                 break
-        
-        moves: np.ndarray = selected_piece.get_info()["moves"]
-        moves = np.expand_dims(moves, axis=1)
-        multiple : np.ndarray = np.arange(1,8).reshape((7,1))
-        moves = moves*multiple
-        move = moves[moveAndmultiple//10, moveAndmultiple%10, :]
+        move: np.ndarray
+        if selected_piece.get_name() in ["p", "N", "K"]:
+            moves : np.ndarray = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"])) if selected_piece.get_name() == "p" else selected_piece.get_info()["moves"]
+            move = moves[moveAndmultiple%10].reshape((2))
+        else:
+            moves: np.ndarray[np.ndarray] = selected_piece.get_info()["moves"]
+            moves = np.expand_dims(moves, axis=1)
+            multiple : np.ndarray = np.arange(1,8).reshape((7,1))
+            moves = moves*multiple
+            move = moves[moveAndmultiple//10, moveAndmultiple%10].reshape((2))
         newWhite_pList = copy.deepcopy(self.white_pList)
         newBlack_pList = copy.deepcopy(self.black_pList)
         newPiece = piece_at_that_pos(selected_piece.get_position(),newWhite_pList,newBlack_pList)
@@ -90,12 +94,24 @@ class Game():
             piece = self.allowedPiece[index]
             action = piece.id*100
             mov:np.ndarray = self.allowedActions[index] - piece.get_position()
-            direction_move = np.expand_dims(piece.get_info()["moves"],axis=1)
-            multiple = np.arange(1,8).reshape((7,1))
-            direction_move = direction_move*multiple
-            mov = np.reshape(mov, (mov.shape[0], 1,1, mov.shape[1]))
-            truth = (direction_move == mov).all(axis= 3)
+            data:list
+            basic_moves: np.ndarray
+            Axis: int
+            if not piece.get_name() in ["p", "N", "K"]:
+                basic_moves = np.expand_dims(piece.get_info()["moves"],axis=1)
+                multiple = np.arange(1,8).reshape((7,1))
+                basic_moves = basic_moves*multiple
+                mov = np.reshape(mov, (mov.shape[0], 1,1, mov.shape[1]))
+                Axis = 3
+            else:
+                basic_moves = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"])) if piece.get_name() == "p" else piece.get_info()["moves"]
+                basic_moves = np.expand_dims(basic_moves,axis=1)
+                Axis = 2
+            
+            truth = (basic_moves == mov).all(axis= Axis)
             data = np.where(truth)
+            if piece.get_name() in ["p", "N"]:
+                data:list[np.ndarray] = [np.zeros(data[0].size,dtype=int), data[1]]
             actions = data[1]*10 + data[2] + action
             indices += actions.tolist()  
         
