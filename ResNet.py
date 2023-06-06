@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from game import *
 
-COLUMN = 8
-WIDTH = 8
+IMGCOLUMN = 9
+IMGWIDTH = 9
 
 class ResNet(nn.Module):
     def __init__(self, game:Game, numResBlocks, numHidden, device) -> None:
@@ -12,7 +12,7 @@ class ResNet(nn.Module):
         
         self.device = device
         self.startBlock = nn.Sequential(
-            nn.Conv2d(8, numHidden, kernel_size=8, padding=1),
+            nn.Conv2d(3, numHidden, kernel_size=9, padding=4),
             nn.BatchNorm2d(numHidden),
             nn.ReLU()
         )
@@ -22,24 +22,25 @@ class ResNet(nn.Module):
         )
        
         self.policyHead = nn.Sequential(
-            nn.Conv2d(numHidden, 32, kernel_size=8, padding=1),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(numHidden, 452, kernel_size=9, padding=4),
+            nn.BatchNorm2d(452),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(32 * COLUMN * WIDTH, game.validMovesNum)
+            nn.Linear(452 * IMGCOLUMN * IMGWIDTH, 3288)
         ) 
         
         self.valueHead = nn.Sequential(
-            nn.Conv2d(numHidden, 8, kernel_size=8, padding=1),
-            nn.BatchNorm2d(8),
+            nn.Conv2d(numHidden, 32, kernel_size=9, padding=4),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(700, 1),
+            nn.Linear(32*IMGCOLUMN*IMGWIDTH, 1),
             nn.Tanh()
         )
         self.to(device)
     
     def forward(self,x):
+
         x = self.startBlock(x)
         for resBlock in self.backBone:
             x = resBlock(x)

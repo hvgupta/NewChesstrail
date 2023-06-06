@@ -16,16 +16,18 @@ class Game():
         self.allowedPiece,self.allowedActions = self.get_allowedMoves()
 
     def get_encodedState(self) -> np.ndarray:
-        encoded_array = np.zeros((3,8,8)) # the 3 8x8 arrays which contain the information about the point of the piece and their colour denoted by the sign 
+        encoded_array = np.zeros((3,9,9)) # the 3 8x8 arrays which contain the information about the point of the piece and their colour denoted by the sign 
         for piece in self.white_pList:
             if piece.isDestroyed(): continue
-            encoded_array[0, tuple(piece.get_position())] = piece.get_info()["points"]
+            piecePos = piece.get_position()
+            encoded_array[0, piecePos[0],piecePos[1]] = piece.get_info()["points"]
         for piece in self.black_pList:
             if piece.isDestroyed(): continue
-            encoded_array[1, tuple(piece.get_position())] = piece.get_info()["points"]
+            piecePos = piece.get_position()
+            encoded_array[1, piecePos[0],piecePos[1]] = piece.get_info()["points"]
         
         encoded_array[2] = (encoded_array[0] == 0) & (encoded_array[1] == 0)
-        
+        encoded_array = np.float32(encoded_array)
         return encoded_array
     
     def move_piece(self, actionNum: int)->tuple:
@@ -68,7 +70,7 @@ class Game():
         newBlack_pList = copy.deepcopy(self.black_pList)
         newPiece = piece_at_that_pos(selected_piece.get_position(),newWhite_pList,newBlack_pList)
         
-        second_click(self.board,moves.reshape((moves.shape[0],moves.shape[2])),newWhite_pList,newBlack_pList,newPiece, tuple(move),[tuple(newPiece.get_position(), tuple(move))])
+        second_click(self.board,moves,newWhite_pList,newBlack_pList,newPiece, tuple(move),[tuple(newPiece.get_position()), tuple(move)])
         
         return newWhite_pList,newBlack_pList
     
@@ -99,12 +101,13 @@ class Game():
         moveType: {U: 0, UR: 1, R: 2, DR: 3, D: 4, DL: 5, L: 6, UL: 7}*10
         multiple {1:8}*1
         therefore a 4 digit number
+        there index is the actions and the value in the index is the state (1) being allowed, and 0 being not allowed
         '''
-        indices = []
-        for index in range(len(self.validMovesNum)):
+        actionTruth: np.ndarray = np.zeros(3288)
+        for index in range(len(self.allowedPiece)):
             piece = self.allowedPiece[index]
             action = piece.id*100
-            mov:np.ndarray = self.allowedActions[index] - piece.get_position()
+            mov:np.ndarray = (self.allowedActions[index] - piece.get_position())*piece.get_colour()
             data:list
             basic_moves: np.ndarray
             Axis: int
@@ -129,10 +132,10 @@ class Game():
             data = np.where(truth)
             if piece.get_name() in ["p", "N", "K"]:
                 data:list[np.ndarray] = [np.zeros(data[0].size,dtype=int), data[1]]
-            actions = data[1]*10 + data[2] + action
-            indices += actions.tolist()  
+            actions = data[0]*10 + data[1] + action
+            actionTruth[actions] = 1
         
-        return indices  
+        return actionTruth  
     
     def valueAndterminated(self):
         isChecked = check(self.WhiteK, self.BlackK, self.white_pList, self.black_pList)

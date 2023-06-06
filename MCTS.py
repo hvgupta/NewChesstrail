@@ -3,7 +3,7 @@ from Node import *
 from AI import *
 
 class MCTS:
-    def __init__(self,game:Game, args, model):
+    def __init__(self,game:Game, args, model:ResNet):
         self.game:Game = game
         self.args = args
         self.model = model
@@ -17,7 +17,7 @@ class MCTS:
         )
         policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
         policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
-            * np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.validMovesNum)
+            * np.random.dirichlet([self.args['dirichlet_alpha']] * 3288)
         
         valid_moves = self.game.get_validMoves()
         policy *= valid_moves

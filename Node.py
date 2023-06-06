@@ -7,7 +7,7 @@ from board import *
 from game import *
 
 class Node:
-    def __init__(self,game:Game ,args:dict , parent:Node = None, action:int = None, prior:int = 0) -> None:
+    def __init__(self,game:Game ,args:dict , parent:Node = None, action:int = None, prior:int = 0, visit_count: int = 0) -> None:
         
         self.game:Game = game
         self.args:dict = args
@@ -17,7 +17,7 @@ class Node:
         self.children:list[Node] = []
         self.prior:int = prior
         
-        self.visit_count:int = 0
+        self.visit_count:int = visit_count
         self.value_sum:int = 0
     
     def isFullyExpanded(self)->bool:

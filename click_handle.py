@@ -9,7 +9,7 @@ from Piece import *
 def FenInitialisation():
     p.init()
     p.font.init()
-    start_screen = p.display.set_mode((WIDTH,HEIGHT))
+    start_screen = p.display.set_mode((IMGWIDTH,HEIGHT))
     start_screen.fill((0,0,0))
     base_font =  p.font.SysFont("monospace",16)
     input_fen = ''

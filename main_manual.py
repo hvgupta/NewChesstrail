@@ -2,7 +2,7 @@ from click_handle import *
          
 def main(fen = ""):
     # initialising pygame ...
-    screen = p.display.set_mode((WIDTH,HEIGHT))
+    screen = p.display.set_mode((IMGWIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     
     #creating the chess board array

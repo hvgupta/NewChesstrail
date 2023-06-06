@@ -3,7 +3,7 @@ from Piece import *
 import pygame as p
 import copy
 
-WIDTH = HEIGHT = 512
+IMGWIDTH = HEIGHT = 512
 DIMENSION = 8
 SQ_SIZE = HEIGHT//DIMENSION
 IMAGES = {}
@@ -391,10 +391,10 @@ def pawn_promotion(piece:Piece,screen: p.Surface,board: list[list[str]]):
     for Piece_letter in piece_image.keys():
         piece_image[Piece_letter] = p.transform.scale(p.image.load(f"chess_pngs/{current_Colour.name}{Piece_letter}.png"),(2*SQ_SIZE,2*SQ_SIZE))
 
-    pawn_promotion_screen = p.Surface((WIDTH,HEIGHT))
+    pawn_promotion_screen = p.Surface((IMGWIDTH,HEIGHT))
     pawn_promotion_screen.fill((0,0,0))
     pawn_promotion_screen.set_alpha(200)
-    Piece_screen = p.Surface((WIDTH,HEIGHT))
+    Piece_screen = p.Surface((IMGWIDTH,HEIGHT))
     p.draw.rect(pawn_promotion_screen,(250,250,250),p.Rect(5*SQ_SIZE,5*SQ_SIZE,SQ_SIZE*6,SQ_SIZE*3))
     
     position_possible = np.array([[3,0],[3,1],[4,0],[4,1],[3,2],[3,3],[4,2],[4,3],[3,4],[3,5],[4,4],[4,5],[3,6],[3,7],[4,6],[4,7]])
@@ -454,7 +454,7 @@ def move_to_attack_line(piece: Piece, attack_movs: np.ndarray, p_pos_return: boo
         return to,return_total if p_pos_return else to
 
 def game_end(case: int,screen: p.Surface):
-    game_end_screen = p.Surface((WIDTH,HEIGHT))
+    game_end_screen = p.Surface((IMGWIDTH,HEIGHT))
     game_end_screen.fill((0,0,0))
     game_end_screen.set_alpha(200)
     p.font.init()

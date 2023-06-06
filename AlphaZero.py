@@ -1,7 +1,6 @@
 from MCTS import *
 from game import *
 import random
-from tqdm.notebook import trange
 
 class AlphaZero():
     def __init__(self, model, optimizer, game, args)->None:
@@ -70,11 +69,11 @@ class AlphaZero():
             memory = []
             
             self.model.eval()
-            for selfPlay_iteration in trange(self.args['num_selfPlay_iterations']):
+            for selfPlay_iteration in range(self.args['num_selfPlay_iterations']):
                 memory += self.selfPlay()
                 
             self.model.train()
-            for epoch in trange(self.args['num_epochs']):
+            for epoch in range(self.args['num_epochs']):
                 self.train(memory)
             
             torch.save(self.model.state_dict(), f"model_{iteration}_{self.game}.pt")

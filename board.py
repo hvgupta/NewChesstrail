@@ -47,14 +47,13 @@ class Board():
     def initialise(board: list[list[str]]): 
         black_PList = []
         white_PList = []
+        Id: int = 0
         for row in range(8):
             for col in range(8):
                 if board[row][col] == "--":
                     continue
                 colour = getattr(Colour,board[row][col][0])
                 piece_type = getattr(PieceType,board[row][col][1])
-                
-                Id: int = 0
                 
                 if colour.value == Colour.w.value:
                     white_PList.append(Piece(piece_type,np.array((row,col)),colour,Id))

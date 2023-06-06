@@ -4,7 +4,7 @@ from ResNet import *
 from MCTS import *
 
 def main(fen = ""):
-    screen = p.display.set_mode((WIDTH,HEIGHT))
+    screen = p.display.set_mode((IMGWIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     c_board = Board()
     White_pList: list[Piece]
