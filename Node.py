@@ -21,7 +21,7 @@ class Node:
         self.value_sum:int = 0
     
     def isFullyExpanded(self)->bool:
-        return len(self.children) <= 0
+        return len(self.children) > 0 
 
     def select(self)->Node:
         bestChild = None
@@ -45,9 +45,9 @@ class Node:
     def expand(self, policy):
         for action, prob in enumerate(policy):
             if prob > 0:
-                WList, BList = self.game.move_piece(action)
+                WList, BList, WKing, BKing, newBoard = self.game.move_piece(action)
                 child_colour = self.game.turn*-1
-                child = Node(Game(WList,BList,self.game.WhiteK, self.game.BlackK,child_colour, self.game.board),self.args, self, action,prob)
+                child = Node(Game(WList,BList,WKing, BKing,child_colour, newBoard),self.args, self, action,prob)
                 self.children.append(child)
                 
         return child

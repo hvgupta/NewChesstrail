@@ -4,7 +4,7 @@ import random
 
 class AlphaZero():
     def __init__(self, model, optimizer, game, args)->None:
-        self.model = model
+        self.model: ResNet = model
         self.optimizer = optimizer
         self.game:Game = game
         self.args = args
@@ -22,10 +22,14 @@ class AlphaZero():
             memory.append((neutral_state, action_probs, player))
             
             temperature_action_probs = action_probs ** (1 / self.args['temperature'])
-            action = np.random.choice(self.game.validMovesNum, p=temperature_action_probs) # Divide temperature_action_probs with its sum in case of an error
+            temperature_action_probs /= np.sum(temperature_action_probs)
             
-            state = self.game.move_piece(action)
-            
+            if self.game.validMovesNum  != 0:
+                
+                action = np.random.choice(3288, p=temperature_action_probs) # Divide temperature_action_probs with its sum in case of an error
+                
+                state = self.game.move_piece(action)
+                
             value, is_terminal = self.game.valueAndterminated()
             
             if is_terminal:

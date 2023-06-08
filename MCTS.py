@@ -36,7 +36,7 @@ class MCTS:
                     torch.tensor(node.game.get_encodedState(), device=self.model.device).unsqueeze(0)
                 )
                 policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
-                valid_moves = self.game.get_validMoves()
+                valid_moves = node.game.get_validMoves()
                 policy *= valid_moves
                 policy /= np.sum(policy)
                 
@@ -47,7 +47,7 @@ class MCTS:
             node.backpropagate(value)    
             
             
-        action_probs = np.zeros(self.game.validMovesNum)
+        action_probs = np.zeros(3288)
         for child in root.children:
             action_probs[child.action_taken] = child.visit_count
         action_probs /= np.sum(action_probs)

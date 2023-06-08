@@ -6,11 +6,11 @@ from click_handle import *
 
 class Game():
     def __init__(self, white_pList:list[Piece], black_pList:list[Piece], WhiteK:Piece, BlackK:Piece, turn: int, board: Board) -> None:
-        self.white_pList = copy.deepcopy(white_pList)
-        self.black_pList = copy.deepcopy(black_pList)
+        self.white_pList = white_pList
+        self.black_pList = black_pList
         self.WhiteK = WhiteK
         self.BlackK = BlackK
-        self.board = copy.deepcopy(board)
+        self.board = board
         self.turn = turn
         self.validMovesNum = 0
         self.allowedPiece,self.allowedActions = self.get_allowedMoves()
@@ -48,16 +48,22 @@ class Game():
             if piece.id == id:
                 selected_piece = piece
                 break
+        index:int = self.allowedPiece.index(piece)
+        legalMoves: np.ndarray = self.allowedActions[index]
         move: np.ndarray
-        if selected_piece.get_name() in ["p", "N", "K"]:
-            if selected_piece.get_name() == "p":
-                moves: np.ndarray = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"]))
-            elif selected_piece.get_name() == "K":
+        if selected_piece.get_name() in ["N", "K"]:
+            if selected_piece.get_name() == "K":
                 moves: np.ndarray = np.concatenate((PieceType.K.value["moves"], PieceType.K.value["castle"]))
             else:
                 moves: np.ndarray = selected_piece.get_info()["moves"]
             # moves : np.ndarray = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"])) if selected_piece.get_name() == "p" else selected_piece.get_info()["moves"]
             move = moves[moveAndmultiple%10].reshape((2))
+        elif selected_piece.get_name() == "p":
+            if moveAndmultiple%10 > 3:
+                move = np.array([1,0])
+            else:
+                moves: np.ndarray = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"]))
+                move = moves[moveAndmultiple%10].reshape((2))
         else:
             moves: np.ndarray[np.ndarray] = selected_piece.get_info()["moves"]
             moves = np.expand_dims(moves, axis=1)
@@ -65,14 +71,17 @@ class Game():
             moves = moves*multiple
             move = moves[moveAndmultiple//10, moveAndmultiple%10].reshape((2))
             
-        move = move + selected_piece.get_position()
+        move = move*piece.get_colour() + selected_piece.get_position()
         newWhite_pList = copy.deepcopy(self.white_pList)
         newBlack_pList = copy.deepcopy(self.black_pList)
         newPiece = piece_at_that_pos(selected_piece.get_position(),newWhite_pList,newBlack_pList)
-        
-        second_click(self.board,moves,newWhite_pList,newBlack_pList,newPiece, tuple(move),[tuple(newPiece.get_position()), tuple(move)])
-        
-        return newWhite_pList,newBlack_pList
+        newBoard = copy.deepcopy(self.board)
+        second_click(newBoard,legalMoves,newWhite_pList,newBlack_pList,newPiece, tuple(move),[tuple(newPiece.get_position()), tuple(move)])
+        newWKing, newBKing = getKing(newWhite_pList,newBlack_pList)
+        if newPiece.get_name() == "p" and moveAndmultiple%10 > 3:
+            promotionArray: list[PieceType] = [PieceType.Q, PieceType.N, PieceType.R, PieceType.B]
+            newPiece.change_type(promotionArray[(moveAndmultiple%10)-4])
+        return newWhite_pList,newBlack_pList, newWKing, newBKing, newBoard
     
     def get_allowedMoves(self)->tuple[list[Piece], list[np.ndarray]]:
         '''
@@ -124,15 +133,22 @@ class Game():
                     basic_moves: np.ndarray = np.concatenate((PieceType.K.value["moves"], PieceType.K.value["castle"]))
                 else:
                     basic_moves: np.ndarray = piece.get_info()["moves"]
-                # basic_moves = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"])) if piece.get_name() == "p" else piece.get_info()["moves"]
                 basic_moves = np.expand_dims(basic_moves,axis=1)
                 Axis = 2
             
             truth = (basic_moves == mov).all(axis= Axis)
-            data = np.where(truth)
-            if piece.get_name() in ["p", "N", "K"]:
-                data:list[np.ndarray] = [np.zeros(data[0].size,dtype=int), data[1]]
-            actions = data[0]*10 + data[1] + action
+            data:list[np.ndarray] = np.where(truth)
+            if piece.get_name() in ["N", "K"]:
+                data = [np.zeros(data[0].size,dtype=int), data[0]]
+            elif piece.get_name() == "p":
+                index: int  = 0 if piece.get_colour() == Colour.w.value else 1
+                
+                if (piece.get_position() + np.array([1,0])*piece.get_colour() == np.array([[0,0],[7,0]])[index]).all():
+                    data = [np.zeros(data[0].size + 4, dtype=int), np.concatenate((data[1], np.array([4,5,6,7])))]
+                else:
+                    data = [np.zeros(data[0].size,dtype=int), data[1]]
+            
+            actions = data[Axis-2]*10 + data[Axis-1] + action
             actionTruth[actions] = 1
         
         return actionTruth  
