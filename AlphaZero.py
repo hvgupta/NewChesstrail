@@ -16,7 +16,7 @@ class AlphaZero():
         
         game = self.game
         while True:
-            neutral_state = [game.white_pList, game.black_pList]
+            neutral_state = game
             action_probs = self.mcts.search()
             
             memory.append((neutral_state, action_probs, player))
@@ -37,7 +37,7 @@ class AlphaZero():
                 for hist_neutral_state, hist_action_probs, hist_player in memory:
                     hist_outcome = value if hist_player == player else -value
                     returnMemory.append((
-                        self.game.get_encodedState(hist_neutral_state),
+                        hist_neutral_state.get_encodedState(),
                         hist_action_probs,
                         hist_outcome
                     ))

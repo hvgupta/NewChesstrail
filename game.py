@@ -95,7 +95,9 @@ class Game():
         for piece in colour_choosen_list:
             if piece.isDestroyed():
                 continue
-            all_moves,all_attack = movesReturn(piece)   
+            all_moves,all_attack = movesReturn(piece)
+            if piece.get_name() == "p":
+                all_moves = all_moves.reshape((all_moves.shape[1], all_moves.shape[0],2))   
             legal_moves = returnValidPos(all_moves,self.white_pList,self.black_pList,None,piece,[self.WhiteK,self.BlackK],all_attack if piece.get_name() == "p" else None,True)
             if legal_moves.size > 0:
                 Piece_can_move.append(piece)
@@ -113,6 +115,7 @@ class Game():
         there index is the actions and the value in the index is the state (1) being allowed, and 0 being not allowed
         '''
         actionTruth: np.ndarray = np.zeros(3288)
+        values:list = []
         for index in range(len(self.allowedPiece)):
             piece = self.allowedPiece[index]
             action = piece.id*100
@@ -150,8 +153,9 @@ class Game():
             
             actions = data[Axis-2]*10 + data[Axis-1] + action
             actionTruth[actions] = 1
+            values += actions.tolist()
         
-        return actionTruth  
+        return actionTruth, values
     
     def valueAndterminated(self):
         isChecked = check(self.WhiteK, self.BlackK, self.white_pList, self.black_pList)

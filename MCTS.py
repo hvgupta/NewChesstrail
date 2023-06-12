@@ -1,8 +1,7 @@
 from ResNet import *
 from Node import *
-from AI import *
 
-class MCTS:
+class MCTS():
     def __init__(self,game:Game, args, model:ResNet):
         self.game:Game = game
         self.args = args
@@ -19,7 +18,7 @@ class MCTS:
         policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
             * np.random.dirichlet([self.args['dirichlet_alpha']] * 3288)
         
-        valid_moves = self.game.get_validMoves()
+        valid_moves, gg = self.game.get_validMoves()
         policy *= valid_moves
         policy /= np.sum(policy)
         root.expand(policy)
@@ -29,14 +28,14 @@ class MCTS:
             
             while node.isFullyExpanded():
                 node = node.select()
-            value, is_terminal = self.game.valueAndterminated()
+            value, is_terminal = node.game.valueAndterminated()
             value *= -1
             if not is_terminal:
                 policy, value = self.model(
                     torch.tensor(node.game.get_encodedState(), device=self.model.device).unsqueeze(0)
                 )
                 policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
-                valid_moves = node.game.get_validMoves()
+                valid_moves, gg = node.game.get_validMoves()
                 policy *= valid_moves
                 policy /= np.sum(policy)
                 

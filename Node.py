@@ -6,7 +6,7 @@ from type_enum import *
 from board import *
 from game import *
 
-class Node:
+class Node():
     def __init__(self,game:Game ,args:dict , parent:Node = None, action:int = None, prior:int = 0, visit_count: int = 0) -> None:
         
         self.game:Game = game
@@ -24,6 +24,7 @@ class Node:
         return len(self.children) > 0 
 
     def select(self)->Node:
+        ''' upper confidence bound'''
         bestChild = None
         bestUCB = -np.inf
         

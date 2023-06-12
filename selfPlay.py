@@ -1,4 +1,3 @@
-from click_handle import *
 from AI import *
 from ResNet import *
 from MCTS import *
