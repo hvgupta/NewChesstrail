@@ -35,6 +35,7 @@ class MCTS():
                     torch.tensor(node.game.get_encodedState(), device=self.model.device).unsqueeze(0)
                 )
                 policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+                node.printDetail()
                 valid_moves, gg = node.game.get_validMoves()
                 policy *= valid_moves
                 policy /= np.sum(policy)

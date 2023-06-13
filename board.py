@@ -17,7 +17,7 @@ class Board():
                 ["wp","wp","wp","wp","wp","wp","wp","wp"],
                 ["wR","wN","wB","wQ","wK","wB","wN","wR"]
                 ]
-            self.Turn = Colour.w
+            # self.Turn = Colour.w
         else:
             row = 0
             index = 0
@@ -31,7 +31,7 @@ class Board():
                 else: break
                 index +=1
             turn = fen[index+1]
-            self.Turn = Colour.w if turn == "w" else Colour.b
+            # self.Turn = Colour.w if turn == "w" else Colour.b
     
     def move_piece(self,piece: Piece,to: list):
         if piece == "--":
@@ -77,3 +77,11 @@ class Board():
         encoded_array[2] = (encoded_array[0] == 0) & (encoded_array[1] == 0)
         
         return encoded_array
+    
+    def copy(self):
+        newBoard : list = []
+        for chrac in self.board:
+            newBoard.append(chrac.copy())
+        objBoard = Board()
+        objBoard.board = newBoard
+        return objBoard

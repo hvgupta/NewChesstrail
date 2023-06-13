@@ -72,10 +72,14 @@ class Game():
             move = moves[moveAndmultiple//10, moveAndmultiple%10].reshape((2))
             
         move = move*piece.get_colour() + selected_piece.get_position()
-        newWhite_pList = copy.deepcopy(self.white_pList)
-        newBlack_pList = copy.deepcopy(self.black_pList)
+        newWhite_pList: list[Piece] = []
+        newBlack_pList: list[Piece] = []
+        for wPiece in self.white_pList:
+            newWhite_pList.append(wPiece.copy())
+        for bPiece in self.black_pList:
+            newBlack_pList.append(bPiece.copy())
         newPiece = piece_at_that_pos(selected_piece.get_position(),newWhite_pList,newBlack_pList)
-        newBoard = copy.deepcopy(self.board)
+        newBoard = self.board.copy()
         second_click(newBoard,legalMoves,newWhite_pList,newBlack_pList,newPiece, tuple(move),[tuple(newPiece.get_position()), tuple(move)])
         newWKing, newBKing = getKing(newWhite_pList,newBlack_pList)
         if newPiece.get_name() == "p" and moveAndmultiple%10 > 3:
@@ -171,4 +175,19 @@ class Game():
             if check_mate(isChecked, self.white_pList, self.black_pList):
                 return 100, True
             return 1, False
+        
+    # def copy(self):
+    #     newWhite_pList:list[Piece] = []
+    #     newBlack_pList:list[Piece] = []
+    #     for wPiece in self.white_pList:
+    #         newWhite_pList.append(wPiece.copy())
+    #     for bPiece in self.black_pList:
+    #         newBlack_pList.append(bPiece.copy())
+       
+    #     newWhiteK, newBlackK = getKing(newWhite_pList, newBlack_pList)
+    #     newBoard = self.board.copy()
+    #     newTurn = copy.deepcopy(self.turn)
+    #     newGame = Game(newWhite_pList, newBlack_pList, newWhiteK, newBlackK, newTurn, newBoard)
+        
+    #     return newGame
             

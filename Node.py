@@ -60,3 +60,12 @@ class Node():
         value *= -1 
         if self.parent is not None:
             self.parent.backpropagate(value)  
+
+    def printDetail(self):
+        for index in range(len(self.game.allowedPiece)):
+            allowedP = self.game.allowedPiece[index]
+            print(f"{allowedP.name} {allowedP.get_position()}: {str(self.game.allowedActions[index].tolist())}")
+        
+        for len8 in self.game.board.board:
+            print(len8)
+            

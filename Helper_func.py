@@ -1,7 +1,6 @@
 import numpy as np
 from Piece import *
 import pygame as p
-import copy
 
 IMGWIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -55,7 +54,7 @@ def returnValidPos(all_possible:np.ndarray, White_pList: list[Piece], Black_pLis
             attacking_p_movs,skip = movesReturn(attackingPiece)
             attacking_p_movs = get_attack_line(checked_king,attacking_p_movs, attackingPiece.get_position())
         else:
-            attacking_p_movs = np.expand_dims(copy.deepcopy(attackingPiece.get_position()),axis=0)
+            attacking_p_movs = np.expand_dims(attackingPiece.get_position().copy(),axis=0)
 
     for turn_set in all_possible: # one of the base movement as shown in the PieceType class
 
@@ -341,7 +340,7 @@ def check_mate(king:Piece,white_pList: list[Piece], black_pList: list[Piece]) ->
             attacking_p_movs,skip = movesReturn(attacking_p)
             attacking_line = get_attack_line(king,attacking_p_movs,attacking_p.get_position()) # gets how the piece is attacking, the line in which it is attacking from
         else:
-            attacking_line = np.expand_dims(copy.deepcopy(attacking_p.get_position()),axis=0) # if it is a pawn, get its position and apply matrix operation so that the dimension is same
+            attacking_line = np.expand_dims(attacking_p.get_position().copy(),axis=0) # if it is a pawn, get its position and apply matrix operation so that the dimension is same
             
         if attacking_line.any() == False: #if the attacking line does not exist then there is no check, (just as a precaution)
             return False
