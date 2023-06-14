@@ -59,7 +59,11 @@ class Piece(object): # defines the pieces with their colour, their piece type(it
     
     def copy(self):
         newPieceType = getattr(PieceType,self.piece_type.name)
-        newPos = self.position.copy()
+        newPos: np.ndarray
+        if self.isDestroyed():
+          newPos = None
+        else:
+          newPos = self.position.copy()
         newColour = Colour.w.value if self.Colour else Colour.b.value
         newID = copy.deepcopy(self.id)
         newPiece = Piece(newPieceType,newPos, newColour, newID)
