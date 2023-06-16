@@ -88,12 +88,12 @@ def second_click(c_board:Board,legal_moves: np.ndarray, White_pList: list[Piece]
         c_board.move_piece(selected_p, np.array(sqSelected))
         check_for_en_passant = piece_at_that_pos(np.array([sqSelected]) - np.array([selected_p.get_colour(),0]), White_pList, Black_pList)
         if check_for_en_passant != 0 and selected_p.get_name() == "p":
-            destroyed_p(check_for_en_passant)
+            destroy_p(check_for_en_passant)
             c_board.move_piece("--",( np.array([sqSelected]) - np.array([selected_p.get_colour(),0])).reshape((2)))
 
     elif attacked_p != EMPTY_POS:# if the piece is moving to a space which is occupied by the opposite team
         c_board.move_piece(selected_p,np.array(sqSelected))
-        destroyed_p(attacked_p)
+        destroy_p(attacked_p)
 
     return 1
         

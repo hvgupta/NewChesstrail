@@ -160,7 +160,7 @@ def AI_logic(White_pList: list[Piece], Black_pList: list[Piece], WhiteK: Piece, 
             elif check_for_piece != EMPTY_POS:
                 old = check_for_piece.get_position()
                 piece.change_pos(move)
-                destroyed_p(check_for_piece)
+                destroy_p(check_for_piece)
             W_position_array = PieceArray(White_pList)
             B_position_array = PieceArray(Black_pList)
             Cur_colour = pieces_which_can_move(White_pList, Black_pList, WhiteK, BlackK, current_turn)
@@ -187,7 +187,7 @@ def AI_logic(White_pList: list[Piece], Black_pList: list[Piece], WhiteK: Piece, 
         elif any_piece.get_name() != "K":
             move["piece"].change_pos(move["move"])
             old = any_piece.get_position()
-            destroyed_p(any_piece)
+            destroy_p(any_piece)
         Score += AI_logic(White_pList,Black_pList,WhiteK,BlackK, depth+1, current_turn*-1)
         move["piece"].change_pos(p_old)
         if any_piece != 0:

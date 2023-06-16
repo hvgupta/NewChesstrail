@@ -9,7 +9,7 @@ def main(fen = ""):
     c_board = Board()
     White_pList: list[Piece]
     Black_pList: list[Piece]
-    White_pList, Black_pList = c_board.initialise(c_board.board)
+    White_pList, Black_pList, PieceonBoard = c_board.initialise(c_board.board)
     loadImages()
     running = True
     current_turn = Colour.w.value

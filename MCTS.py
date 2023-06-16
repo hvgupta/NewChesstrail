@@ -64,20 +64,21 @@ class MCTSParallel():
 
     @torch.no_grad()
     def search(self, spGames: list[SPG]):
+        states = np.stack([spGame.game.get_encodedState() for spGame in spGames])
         policy, _ = self.model(
-            torch.tensor(self.game.get_encodedState(), device=self.model.device)
+            torch.tensor(states, device=self.model.device)
         )
-        policy = torch.softmax(policy, axis=1).cpu().numpy()
+        policy:np.ndarray = torch.softmax(policy, axis=1).cpu().numpy()
         policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
-            * np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size, size=policy.shape[0])
+            * np.random.dirichlet([self.args['dirichlet_alpha']] * 3288, size=policy.shape[0])
         spg:SPG
         for i, spg in enumerate(spGames):
             spg_policy = policy[i]
-            valid_moves = spg.game.get_validMoves()
+            valid_moves,_ = spg.game.get_validMoves()
             spg_policy *= valid_moves
             spg_policy /= np.sum(spg_policy)
 
-            spg.root = Node(self.game, self.args, states[i], visit_count=1)
+            spg.root = Node(self.game, self.args, visit_count=1)
             spg.root.expand(spg_policy)
         
         for search in range(self.args['num_searches']):
@@ -101,7 +102,7 @@ class MCTSParallel():
                     
             if len(expandable_spGames) > 0:
                 states = np.stack([spGames[mappingIdx].node.game.get_encodedState() for mappingIdx in expandable_spGames])
-                states = np.swapaxes(states,0,1)
+                # states = np.swapaxes(states,0,1)
                 policy, value = self.model(
                     torch.tensor(states, device=self.model.device)
                 )
@@ -112,7 +113,7 @@ class MCTSParallel():
                 node = spGames[mappingIdx].node
                 spg_policy, spg_value = policy[i], value[i]
                 
-                valid_moves = node.game.get_validMoves()
+                valid_moves, _ = node.game.get_validMoves()
                 spg_policy *= valid_moves
                 spg_policy /= np.sum(spg_policy)
 

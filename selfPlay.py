@@ -6,7 +6,7 @@ from AlphaZero import *
 c_board = Board()
 White_pList: list[Piece]
 Black_pList: list[Piece]
-White_pList, Black_pList = c_board.initialise(c_board.board)
+White_pList, Black_pList, PieceonBoard = c_board.initialise(c_board.board)
 running = True
 current_turn = Colour.w.value
 
@@ -21,7 +21,7 @@ args = {
     'num_searches': 600,
     'num_iterations': 8,
     'num_selfPlay_iterations': 500,
-    'num_parallel_games': 100,
+    'num_parallel_games': 500,
     'num_epochs': 4,
     'batch_size': 128,
     'temperature': 1.25,

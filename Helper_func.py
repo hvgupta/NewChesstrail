@@ -40,46 +40,34 @@ def gameState(screen: p.Surface, board:list[list[str]]): #draws the chess board 
 def returnValidPos(all_possible:np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], screen: p.Surface, selected_p: Piece, king_array: list[Piece],all_attack:np.ndarray = None, return_mov:bool = False) -> np.ndarray:
     # this is the visual part of the chess game, it moves to the position, check if it is legal and then moves back
     legal_moves = []
-    attacking_p_movs = []
     
     p_name = selected_p.get_name()
-    attackingPiece = check(king_array[0],king_array[1],White_pList,Black_pList,True) # if the king is checked, then attackingPiece is the Piece checking the king
-    checked_king = king_array[0] if selected_p.get_colour() == Colour.w.value else king_array[1]
+    checked_king = king_array[0] if selected_p.get_colour() == Colour.w.value else king_array[1] # get the king for the current colour
     
     surface = surface_creator(50)
     draw(screen,surface,"p",selected_p.get_position()) if not return_mov else 0
     
-    if attackingPiece != False:
-        if attackingPiece.get_name() != "p":
-            attacking_p_movs,skip = movesReturn(attackingPiece)
-            attacking_p_movs = get_attack_line(checked_king,attacking_p_movs, attackingPiece.get_position())
+    reducedPossibilities = ((all_possible > -1) & (all_possible < 8)).all(axis=2) # take out all the positions which are out of board
+    reducedPossibilities = all_possible[reducedPossibilities]
+    
+    for pos in reducedPossibilities:
+        lineClear = isLineAvailable(selected_p, all_possible, pos, White_pList, Black_pList) # check of the path to that position is clear
+        output = piece_at_that_pos(pos, White_pList, Black_pList) # piece at the position being moved to
+        can_move = check_after_move(selected_p, output, checked_king, pos, White_pList, Black_pList) # check if the move to that position results into check
+        
+        if not can_move or not lineClear:
+            continue
+        surface = surface_creator()
+        if output == EMPTY_POS:
+            draw(screen,surface,"c",pos) if not return_mov else 0 # draw a circle if it is an empty space, and a normal move
+            legal_moves.append(pos)
+            
+        elif p_name == "p": # breaks for pawn cause of the special attacking condition for pawn
+            continue
+        
         else:
-            attacking_p_movs = np.expand_dims(attackingPiece.get_position().copy(),axis=0)
-
-    for turn_set in all_possible: # one of the base movement as shown in the PieceType class
-
-        for pos in turn_set: # depending on the piece, this iterated through the mutiple of the base movement + the Piece's position
-            
-            if (pos[0] > 7 or pos[0] <0) or (pos[1] > 7 or pos[1] < 0): # if the Piece is outside the board
-                break
-            surface = surface_creator()
-            output = piece_at_that_pos(pos,White_pList,Black_pList) # returns the cell status at that position
-            can_move = check_after_move(selected_p, output, checked_king, pos, White_pList, Black_pList) # can move is a bool, can sees if the king is checked after moving to `pos`
-            
-            if not can_move:
-                break
-            
-            elif output == EMPTY_POS:
-                draw(screen,surface,"c",pos) if not return_mov else 0 # draw a circle if it is an empty space, and a normal move
-                legal_moves.append(pos)
-            
-            elif p_name == "p":
-                break
-            
-            else:
-                draw(screen,surface,"r",pos) if not return_mov else 0 # draw a red rectange if the Piece at the position is opposite colour
-                legal_moves.append(pos)
-                break
+            draw(screen,surface,"r",pos) if not return_mov else 0 # draw a red rectange if the Piece at the position is opposite colour
+            legal_moves.append(pos)
 
     if p_name == "p": # this checks for pawn attacking (normal attacks and en passant)
         position_show_for_pawn_attack(all_attack, White_pList, Black_pList, selected_p, checked_king, screen, legal_moves, return_mov)
@@ -97,9 +85,14 @@ def returnValidPos(all_possible:np.ndarray, White_pList: list[Piece], Black_pLis
     return np.array(legal_moves)
 
 def position_show_for_pawn_attack(all_attack: np.ndarray, White_pList: list[Piece], Black_pList: list[Piece], selected_p: Piece, checked_king: Piece, screen: p.Surface, legal_moves: list[np.ndarray], return_mov):
-    for attack in all_attack: # iterates through pawn's normal attack moves 
+    for attack in all_attack: # iterates through pawn's normal attack moves
+        
+        if ((attack < 0) | (attack > 7)).any(): # if the attack is out of the board then continue
+            continue
+        
         surface = surface_creator()
         output = piece_at_that_pos(attack,White_pList,Black_pList)
+        
         if output == EMPTY_POS: #if the attacking is towards an empty position 
             en_passanted_pawn = piece_at_that_pos(np.array([attack[0]-selected_p.get_colour(),attack[1]]), White_pList, Black_pList) # checks if there is a pawn which can be en passant
             if en_passanted_pawn == EMPTY_POS or (en_passanted_pawn.get_name() != "p") or (en_passanted_pawn.get_name() == "p" and not en_passanted_pawn.can_be_en_passant()) or en_passanted_pawn.get_colour() == selected_p.get_colour():
@@ -127,17 +120,20 @@ def surface_creator(alpha:int=25):
 def check_after_move(selected_p: Piece, attacked_p: Piece, king:Piece, to: np.ndarray, White_pList: list[Piece], Black_pList: list[Piece]) -> bool:
     p_old = selected_p.get_position() # saves the old position 
     selected_p.change_pos(to) # changes the position to the new position
+    
     if attacked_p == EMPTY_POS: # if the position being moved to is empty
         valid_move = check(king, None, White_pList, Black_pList) # move does not cause checks on its side, returns if the king is checked
         selected_p.change_pos(p_old) # position returns to old position
         return (valid_move == False) 
+    
     elif attacked_p.get_colour() != selected_p.get_colour(): #if the position being moved to is not empty and of the opposite colour
         attacked_p_old = attacked_p.get_position() # get the position of the attacked piece
-        destroyed_p(attacked_p) # destroy the piece
+        destroy_p(attacked_p) # destroy the piece
         valid_move = check(king, None, White_pList, Black_pList) # check if the move causes can checks on its side, returns if the king is checked
         attacked_p.change_pos(attacked_p_old)
         selected_p.change_pos(p_old) # return to prev positions
         return (valid_move == False)
+    
     selected_p.change_pos(p_old)
     return False
         
@@ -150,7 +146,7 @@ def draw(screen:p.Surface,surface:p.Surface, r_or_c:str, pos:np.ndarray):
         p.draw.rect(surface,(255,255,0),p.Rect(pos[1]*SQ_SIZE,pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE))
     screen.blit(surface,(0,0))
 
-def destroyed_p(attacked_p:Piece):
+def destroy_p(attacked_p:Piece):
     if attacked_p != EMPTY_POS:
         attacked_p.change_pos(None)
         attacked_p.destroyed = True
@@ -167,7 +163,7 @@ def piece_at_that_pos(coord:np.ndarray, White_pList:list[Piece], Black_pList: li
 
     return EMPTY_POS
 
-def check_line(selected_p: Piece,all_possible: np.ndarray,to: np.ndarray,w_list: list[Piece],b_list: list[Piece]) -> bool:
+def isLineAvailable(selected_p: Piece,all_possible: np.ndarray,to: np.ndarray,w_list: list[Piece],b_list: list[Piece]) -> bool:
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1) # looks for which basic move is selected, gives the index of the basic move
     if choosen_dir[0].size == 0:
         return False
@@ -176,7 +172,7 @@ def check_line(selected_p: Piece,all_possible: np.ndarray,to: np.ndarray,w_list:
     if selected_p.get_name() != "p": # if the piece being checked for is not a pawn
         line = all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]
     else:
-        line = (all_possible[choosen_dir[0][0],choosen_dir[1][0]]).reshape((1,2))
+        line = all_possible[choosen_dir[0][0], 0: choosen_dir[1][0]+1]
         
     if selected_p.get_name() == "K" and abs(to[1] - selected_p.get_position()[1]) == 2: # this is to check if castle can be done
         if to[1] - selected_p.get_position()[1] == 2:
@@ -188,19 +184,23 @@ def check_line(selected_p: Piece,all_possible: np.ndarray,to: np.ndarray,w_list:
         output = piece_at_that_pos(list(pos),w_list,b_list)
         if output == EMPTY_POS: # if the position is empty then continue
             continue
-        elif selected_p == output: # if the position is not empty and it is the piece itself, then continue
-            continue
-        else: # otherwise return False (there is something in between the move you want to make)
+        if output.get_colour() == selected_p.get_colour(): # if one of the position on the way is the same colour then return false
+            return False
+        elif selected_p.get_name() == "p": # if the position is occupied and the piece bieng moved is pawn, then return false
+            return False
+        elif not (pos == to).all(): # if the piece is not a pawn and before `to` there is another piece then the piece `to` pos is not valid
             return False
     return True
 
 def movesReturn(piece: Piece)-> list[np.ndarray]:
     if piece == False or piece.isDestroyed(): # checks if the piece is valid
         return None, None
+    
     p_info = piece.get_info()
     p_colour = piece.get_colour()
     p_pos = piece.get_position()
     p_name = piece.get_name()
+    
     # gets the basic info the piece
     if p_name == "p": # if the Piece is a pawn
         if (p_pos[0] == 6 and p_colour == Colour.w.value) or (p_pos[0] == 1 and p_colour == Colour.b.value): #checks if the pawn is at the starting position, therefore can do double move
@@ -250,8 +250,8 @@ def castle_checker(king: Piece, to: np.ndarray, White_pList: list[Piece], Black_
             r_val = 5
             k_val = 6
 
-        if (not check_line(king,movesReturn(king)[0],np.array([K_pos[0],k_val]),White_pList,Black_pList) and 
-            not check_line(piece,movesReturn(piece)[0],np.array([K_pos[0],r_val]),White_pList,Black_pList)): # sees if there is something blocking the way
+        if (not isLineAvailable(king,movesReturn(king)[0],np.array([K_pos[0],k_val]),White_pList,Black_pList) and 
+            not isLineAvailable(piece,movesReturn(piece)[0],np.array([K_pos[0],r_val]),White_pList,Black_pList)): # sees if there is something blocking the way
             return False
         
         can_castle = check_after_move(king, EMPTY_POS, king, to, White_pList, Black_pList) # checks if the move causes checks
@@ -278,25 +278,20 @@ def check(wking: Piece, bking: Piece, White_pList: list[Piece],Black_pList: list
                 
                 elif output.get_colour() == king.get_colour(): # when output is not empty position and output is of the same colour
                     break
-                elif output.get_name() == "p": # output != EMPTY POS and colour NOT same
-                    index_array = (each == mov_num).all(axis=1).nonzero()        
+                
+                moves, attack = movesReturn(output)
+                
+                if output.get_name() == "p": # output != EMPTY POS and colour NOT same
                     
-                    if ((np.array([mov[0]*king.get_colour(),mov[1]]) == output.get_info()["attack"]).all(axis=1)).any() and len(index_array) == 1 and index_array[0][0] == 0:
-                        king.change_pos(k_pos) # this is for resetting the king
+                    if (attack == k_pos).all(axis=1).any():
                         return king if not attacking_p_return else output # the pawn can check the king
-                    
                     else:
                         break # breaks if the pawn cannot check, since, nothing else can check the king from that direction 
-                    
-                elif ((mov == output.get_info()["moves"]).all(axis=1)).any(): # output != BLANK_POS and colour NOT same and not Pawn
-                    
-                    if output.get_name() != "K": # when attacking piece is not king
-                        king.change_pos(k_pos) # this is for resetting the king
-                        return king if not attacking_p_return else output
-                    
-                    if np.where((each == mov_num).all(axis=1) == True)[0] == 0: 
-                        return king if not attacking_p_return else output
-                    break
+                else:
+                    if (moves == k_pos).all(axis=2).any():
+                        return king if not attacking_p_return else output # the pawn can check the king   
+                    else:
+                        break 
                 
         K_horse_check = PieceType.N.value["moves"]+k_pos # checks if the king can be checked by a horse
         K_horse_check = K_horse_check[(np.max(K_horse_check,axis=1)<8) & (np.min(K_horse_check,axis=1)>-1)]
@@ -304,15 +299,11 @@ def check(wking: Piece, bking: Piece, White_pList: list[Piece],Black_pList: list
         for movs in K_horse_check:
             output = piece_at_that_pos(movs,White_pList,Black_pList)
             if output != EMPTY_POS  and output.get_info() == PieceType.N.value and output.get_colour() != king.get_colour():
-                king.change_pos(k_pos)
                 return king if not attacking_p_return else output
             
     return False
 
 def check_mate(king:Piece,white_pList: list[Piece], black_pList: list[Piece]) -> bool:
-    check_m = False
-    output_arr = []
-    # if the king is in check, then can the king do something to aviod the check
     old = king.get_position() # stores, king's old position
     currently_check = check(king,None,white_pList,black_pList) # is the king currently checked?
     if king != currently_check:
@@ -322,46 +313,44 @@ def check_mate(king:Piece,white_pList: list[Piece], black_pList: list[Piece]) ->
         if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all(): # removes position if they are out of board 
             continue
         piece = piece_at_that_pos(pos,white_pList,black_pList)
-        output = None # output can be None (undecided), True (move which is not check), False (move which is check)
+        # output can be None (move cannot be taken), True (move which is not check), False (move which is check)
         if piece == EMPTY_POS or (piece != EMPTY_POS and piece.get_colour() != king.get_colour()):
-            output = check_after_move(king,piece,king,pos, white_pList, black_pList)
-        output_arr.append(output)
-        
-    if not (True in output_arr): # checks if there are any `True`
-        check_m = True
-    output_arr = []
-    # if not then checks if other pieces can break the check     
-    if check_m:
-        correct_self_list = white_pList if white_pList[0].get_colour() == king.get_colour() else black_pList
-        attacking_p = check(king, None,white_pList,black_pList,True)
-        attacking_line = []
-        
-        if attacking_p.get_name() !=  'p': # if the piece is not Pawn
-            attacking_p_movs,skip = movesReturn(attacking_p)
-            attacking_line = get_attack_line(king,attacking_p_movs,attacking_p.get_position()) # gets how the piece is attacking, the line in which it is attacking from
-        else:
-            attacking_line = np.expand_dims(attacking_p.get_position().copy(),axis=0) # if it is a pawn, get its position and apply matrix operation so that the dimension is same
-            
-        if attacking_line.any() == False: #if the attacking line does not exist then there is no check, (just as a precaution)
-            return False
-        for piece in correct_self_list:
-            try:
-                to,piece_movs = move_to_attack_line(piece,attacking_line,True) # sees if any piece can break the attack line
-            except:
-                continue
-            
-            if to.size <= 0: # if the piece cut the line, then continue
-                continue
-            
-            for movs in to:
-                line_clear = check_line(piece,piece_movs,movs,white_pList,black_pList)
-                if not line_clear:
-                    break
-                if piece.get_name() == "K":
-                    break
-                check_m = False
+            output = check_after_move(king,piece,king,pos, white_pList, black_pList) 
+            if output: # if any move can result into avioding the check, then it is not checkmate 
+                return False
+   
+    correct_self_list = white_pList if white_pList[0].get_colour() == king.get_colour() else black_pList
+    attacking_p = check(king, None,white_pList,black_pList,True)
+    attacking_line = []
     
-    return check_m
+    if attacking_p.get_name() !=  'p': # if the piece is not Pawn
+        attacking_p_movs,_ = movesReturn(attacking_p)
+        attacking_line = get_attack_line(king,attacking_p_movs,attacking_p.get_position()) # gets how the piece is attacking, the line in which it is attacking from
+    else:
+        attacking_line = np.expand_dims(attacking_p.get_position().copy(),axis=0) # if it is a pawn, get its position and apply matrix operation so that the dimension is same
+        
+    if attacking_line.any() == False: #if the attacking line does not exist then there is no check, (just as a precaution)
+        return False
+    for piece in correct_self_list:
+        try:
+            to,piece_movs = move_to_attack_line(piece,attacking_line,True) # sees if any piece can break the attack line
+        except:
+            continue
+        
+        if to.size <= 0: # if the piece cut the line, then continue
+            continue
+        
+        for movs in to:
+            lineClear = isLineAvailable(piece,piece_movs,movs,white_pList,black_pList)
+            output = piece_at_that_pos(to, white_pList, black_pList)
+            valid = check_after_move(piece,output, king, to, white_pList, black_pList)
+            if not lineClear or not valid:
+                break
+            if piece.get_name() == "K":
+                break
+            return False
+    
+    return True
 
 def get_attack_line(king: Piece,attacking_piece_moves: np.ndarray,p_pos: np.ndarray):
     choosen_dir = np.nonzero(((king.get_position() == attacking_piece_moves).all(axis=2))*1) # checks which basic move to choose from
@@ -436,11 +425,13 @@ def pawn_promotion(piece:Piece,screen: p.Surface,board: list[list[str]]):
 def move_to_attack_line(piece: Piece, attack_movs: np.ndarray, p_pos_return: bool=False):
     p_movs,all_attack = movesReturn(piece)
     attack_movs = attack_movs.reshape(attack_movs.shape[0],1,1,attack_movs.shape[1])
+    
     if piece.get_name() != "p": # if the Piece is not pawn
         t_table = ((p_movs-attack_movs) == 0).all(axis=3) # this constructs a truth table
         to = p_movs[t_table.any(axis=0)] # uses the truth table to construct the possible moves table
         return to,p_movs if p_pos_return else to
     # does the same for pawn
+    
     elif piece.get_name() == "p":
         all_attack = np.expand_dims(all_attack,axis=1)
         t_table = ((all_attack-attack_movs[-1]) == 0).all(axis=2).reshape(1,2,1)
@@ -469,6 +460,10 @@ def draw_check(White_pList: list[Piece], Black_pList: list[Piece], king_array: l
     w_has_legal_moves = False
     b_has_legal_moves = False
     for side,P_bool in zip([White_pList,Black_pList],[w_has_legal_moves,b_has_legal_moves]):
+        currentKing = king_array[0] if side[0].get_colour() == Colour.w.value else king_array[1]
+        isCheck = check(currentKing,None,White_pList,Black_pList)
+        if isCheck:
+            return False
         for piece in side:
             if piece.isDestroyed():
                 continue
