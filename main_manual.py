@@ -7,14 +7,14 @@ def main(fen = ""):
     
     #creating the chess board array
     c_board = Board(fen)
-    White_pList, Black_pList = c_board.initialise(c_board.board)
+    White_pList, Black_pList, _ = c_board.initialise()
     
     #inseting images on to the pygame window 
     loadImages()
     
     #declaring variables for later use
     running: bool = True
-    current_turn = c_board.Turn.value
+    current_turn = Colour.w.value
     sqSelected = ()
     player_click:list[tuple[int]] = []
     legal_moves = []
@@ -49,7 +49,6 @@ def main(fen = ""):
                     player_click.append(sqSelected)
         
         gameState(screen,c_board.board)
-        
         isCheck = check(whiteKing,blackKing,White_pList,Black_pList) # checks if a king is checked
         if isCheck != False: # verifies if it is a checkmate
             if isCheck.get_colour() == Colour.w.value:
