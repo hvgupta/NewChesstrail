@@ -6,8 +6,8 @@ def main(fen = ""):
     screen.fill(p.Color("white"))
     
     #creating the chess board array
-    c_board = Board(fen)
-    White_pList, Black_pList, _ = c_board.initialise()
+    ChessBoard = Board(fen)
+    ChessBoard.initialise()
     
     #inseting images on to the pygame window 
     loadImages()
@@ -18,7 +18,7 @@ def main(fen = ""):
     sqSelected = ()
     player_click:list[tuple[int]] = []
     legal_moves = []
-    whiteKing, blackKing = getKing(White_pList, Black_pList)
+    whiteKing, blackKing = getKing(ChessBoard)
     selected_p = Piece
     w_checkMated = False
     b_checkMated = False
@@ -47,14 +47,13 @@ def main(fen = ""):
                 else:   
                     sqSelected = (row,col)
                     player_click.append(sqSelected)
-        
-        gameState(screen,c_board.board)
-        isCheck = check(whiteKing,blackKing,White_pList,Black_pList) # checks if a king is checked
+        gameState(screen,ChessBoard.board)
+        isCheck = check(whiteKing,blackKing,ChessBoard) # checks if a king is checked
         if isCheck != False: # verifies if it is a checkmate
             if isCheck.get_colour() == Colour.w.value:
-                w_checkMated = check_mate(isCheck, White_pList, Black_pList)
+                w_checkMated = check_mate(isCheck, ChessBoard)
             else:
-                b_checkMated = check_mate(isCheck, White_pList, Black_pList)
+                b_checkMated = check_mate(isCheck, ChessBoard)
                 
         if w_checkMated or b_checkMated: # if there is a checkmate then end the game
             game_end(1 if w_checkMated else 2,screen)
@@ -62,19 +61,19 @@ def main(fen = ""):
             break
                 
         if len(player_click) == 1: # check if the first click is valid, makes sure if a piece and the correct turn piece is choosen
-            legal, selected_p, legal_moves = first_click(White_pList, Black_pList, current_turn, screen, whiteKing, blackKing, sqSelected, player_click) 
+            legal, selected_p, legal_moves = first_click(ChessBoard, current_turn, screen, whiteKing, blackKing, player_click) 
             if not legal: 
                 sqSelected,player_click = reset(sqSelected,player_click)
                 continue
         
         elif len(player_click) == 2: # handles the second click, which is the movement of the piece. makes sure if the piece can move to that position and so if it doesnt cause checks
             
-            if second_click(c_board, legal_moves, White_pList, Black_pList, selected_p,sqSelected,player_click):
+            if second_click(ChessBoard, legal_moves, selected_p,sqSelected,player_click):
                 
-                gameState(screen,c_board.board)
+                gameState(screen,ChessBoard.board)
                 selected_p.change_castle()
                 current_turn *= -1
-                pawn_promotion(selected_p,screen,c_board.board)
+                pawn_promotion(selected_p,screen,ChessBoard.board)
 
                 sqSelected,player_click = reset(sqSelected,player_click)
             else:
@@ -88,10 +87,10 @@ def main(fen = ""):
                     p.image.load("chess_pngs/cm_c.png"),(SQ_SIZE,SQ_SIZE)),p.Rect(k_pos[1]*SQ_SIZE,k_pos[0]*SQ_SIZE,SQ_SIZE,SQ_SIZE)
                 )
 
-        elif draw_check(White_pList,Black_pList,[whiteKing,blackKing]):
-            game_end(0,screen)
-            running = False
-            break
+        # elif draw_check(White_pList,Black_pList,[whiteKing,blackKing]):
+        #     game_end(0,screen)
+        #     running = False
+        #     break
         p.display.update()
         p.display.flip()
         
