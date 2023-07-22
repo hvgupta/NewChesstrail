@@ -46,9 +46,9 @@ class Node():
     def expand(self, policy):
         for action, prob in enumerate(policy):
             if prob > 0:
-                WList, BList, WKing, BKing, newBoard = self.game.move_piece(action)
+                WKing, BKing, newBoard = self.game.move_piece(action)
                 child_colour = self.game.turn*-1
-                child = Node(Game(WList,BList,WKing, BKing,child_colour, newBoard),self.args, self, action,prob)
+                child = Node(Game(WKing, BKing,child_colour, newBoard),self.args, self, action,prob)
                 self.children.append(child)
                 
         return child

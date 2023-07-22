@@ -64,7 +64,7 @@ class Piece(object): # defines the pieces with their colour, their piece type(it
           newPos = None
         else:
           newPos = self.position.copy()
-        newColour = Colour.w.value if self.Colour else Colour.b.value
+        newColour = Colour.w if self.Colour == Colour.w else Colour.b
         newID = copy.deepcopy(self.id)
         newPiece = Piece(newPieceType,newPos, newColour, newID)
         if self.name in ["K", "R"]:

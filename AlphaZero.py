@@ -117,8 +117,8 @@ class AlphaZeroParallel:
                 temperature_action_probs = action_probs ** (1 / self.args['temperature'])
                 action = np.random.choice(3288, p=temperature_action_probs) # Divide temperature_action_probs with its sum in case of an error
 
-                white_pList, black_pList, WhiteK, BlackK, board = spg.game.move_piece(action)
-                spg.game = Game(white_pList,black_pList,WhiteK,BlackK, spg.game.turn*-1, board)
+                WhiteK, BlackK, board = spg.game.move_piece(action)
+                spg.game = Game(WhiteK,BlackK, spg.game.turn*-1, board)
 
                 value, is_terminal = self.game.valueAndterminated()
 

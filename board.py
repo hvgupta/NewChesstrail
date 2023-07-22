@@ -102,6 +102,21 @@ class Board():
         newBoard : list = []
         for chrac in self.board:
             newBoard.append(chrac.copy())
+        newwhite_plist:list[Piece] = []
+        newblack_plist:list[Piece] = []
+        for piece in self.white_pList:
+            newwhite_plist.append(piece.copy())
+        for piece in self.black_pList:
+            newblack_plist.append(piece.copy())
+        newPieceonBoard: dict[str, Piece] = {}
+        for piece in newwhite_plist+newblack_plist:
+            if piece.isDestroyed():
+                continue
+            newPieceonBoard[str(piece.get_position().tolist())] = piece
         objBoard = Board()
         objBoard.board = newBoard
+        objBoard.white_pList = newwhite_plist
+        objBoard.black_pList = newblack_plist
+        objBoard.PieceonBoard = newPieceonBoard
+        objBoard.Turn = self.Turn
         return objBoard

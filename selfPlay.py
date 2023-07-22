@@ -6,15 +6,14 @@ from AlphaZero import *
 c_board = Board()
 White_pList: list[Piece]
 Black_pList: list[Piece]
-White_pList, Black_pList, PieceonBoard = c_board.initialise(c_board.board)
+c_board.initialise()
 running = True
 current_turn = Colour.w.value
 
-whiteKing = White_pList[12]
-blackKing = Black_pList[4]
-game : Game = Game(White_pList, Black_pList,whiteKing, blackKing,Colour.w.value,c_board)
+whiteKing, blackKing = getKing(c_board)
+game : Game = Game(whiteKing, blackKing,Colour.w.value,c_board)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model: ResNet = ResNet(game,5,1161, device)
+model: ResNet = ResNet(5,1161, device)
 optimizer = torch.optim.Adam(model.parameters(), lr= 0.001)
 args = {
     'C': 2,
@@ -29,7 +28,7 @@ args = {
     'dirichlet_alpha': 0.3
 }
 
-alphaZero = AlphaZero(model, optimizer, game, args)
+alphaZero = AlphaZeroParallel(model, optimizer, game, args)
 alphaZero.learn()
 
 print("done")

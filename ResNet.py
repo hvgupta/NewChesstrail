@@ -7,7 +7,7 @@ IMGCOLUMN = 9
 IMGWIDTH = 9
 
 class ResNet(nn.Module):
-    def __init__(self, game:Game, numResBlocks, numHidden, device) -> None:
+    def __init__(self, numResBlocks, numHidden, device) -> None:
         super().__init__()
         
         self.device = device
