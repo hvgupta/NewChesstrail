@@ -167,17 +167,16 @@ def check_after_move(selected_p: Piece, attacked_p: Piece, king:Piece, to: np.nd
     return (valid_move == False) 
         
 def change_pos(selected_p:Piece, to: np.ndarray, pieceDict:dict[str,Piece], isdestroy:bool = False):
-    if isdestroy: # if the piece is being destroyed
+    if isdestroy: # if the selected piece is being destroyed
         if selected_p in pieceDict.values():
             del pieceDict[str(selected_p.get_position().tolist())]
         destroy_p(selected_p) 
         return
-    elif not selected_p.isDestroyed(): # if the piece is not destroyed
+    elif not selected_p.isDestroyed(): # checks if the selected piece is not destroyed
         del pieceDict[str(selected_p.get_position().tolist())] # delete the original position in the dictionary
     selected_p.change_pos(to)
     pieceDict[str(selected_p.get_position().tolist())] = selected_p # change the key of the sequence of commands
         
-
 def draw(screen:p.Surface,surface:p.Surface, r_or_c:str, pos:np.ndarray):
     if r_or_c.lower() == "c":       
         p.draw.circle(surface,(0,0,0), (32 + (64*pos[1]),32 + (64*pos[0])), DIMENSION*1.5)
@@ -191,18 +190,6 @@ def destroy_p(attacked_p:Piece):
     if attacked_p != EMPTY_POS:
         attacked_p.change_pos(None)
         attacked_p.destroyed = True
-                
-# def piece_at_that_pos(coord:np.ndarray, White_pList:list[Piece], Black_pList: list[Piece]) -> Piece:
-#     piece = None
-#     for p in (White_pList if White_pList != None else [])+(Black_pList if Black_pList != None else []): # iterates through the list of Pieces
-#         try:
-#             if (p.get_position() == coord).all(): # looks for a piece with a specific position
-#                 piece = p
-#                 return piece
-#         except:
-#             continue   
-
-#     return EMPTY_POS
 
 def isLineAvailable(selected_p: Piece,all_possible: np.ndarray,to: np.ndarray,cBoard:Board) -> bool:
     choosen_dir = np.nonzero(((to == all_possible).all(axis= 2))*1) # looks for which basic move is selected, gives the index of the basic move
@@ -354,7 +341,7 @@ def check_mate(king:Piece,cBoard:Board) -> bool:
         if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all(): # removes position if they are out of board 
             continue
         piece = cBoard.piece_at_that_pos(pos)
-        # output can be None (move cannot be taken), True (move which is not check), False (move which is check)
+        # output can be None (move cannot be taken), True (move which does not result in check), False (move which results in check)
         if piece == EMPTY_POS or (piece != EMPTY_POS and piece.get_colour() != king.get_colour()):
             output = check_after_move(king,piece,king,pos, cBoard) 
             if output: # if any move can result into avioding the check, then it is not checkmate 
@@ -378,7 +365,7 @@ def check_mate(king:Piece,cBoard:Board) -> bool:
         except:
             continue
         
-        if to.size <= 0: # if the piece cut the line, then continue
+        if to.size == 0: # if the piece cut the line, then continue
             continue
         
         for movs in to:
@@ -497,31 +484,31 @@ def game_end(case: int,screen: p.Surface):
     screen.blit(text_to_display,(35,100))
     p.display.update()
 
-# def draw_check(White_pList: list[Piece], Black_pList: list[Piece], king_array: list[Piece])-> bool:
-#     w_has_legal_moves = False
-#     b_has_legal_moves = False
-#     for side,P_bool in zip([White_pList,Black_pList],[w_has_legal_moves,b_has_legal_moves]):
-#         currentKing = king_array[0] if side[0].get_colour() == Colour.w.value else king_array[1]
-#         isCheck = check(currentKing,None,White_pList,Black_pList)
-#         if isCheck:
-#             return False
-#         for piece in side:
-#             if piece.isDestroyed():
-#                 continue
-#             legal_moves = 0
-#             if piece.get_name() == "p":
-#                 all_moves,all_attack = movesReturn(piece)
-#                 if type(all_moves) == type(None):
-#                     continue
-#                 legal_moves = returnValidPos(all_moves.reshape((all_moves.shape[1],all_moves.shape[0],2)),White_pList,Black_pList,None, piece,king_array,all_attack,True)
-#             else:
-#                 all_moves,all_attack = movesReturn(piece)
-#                 if type(all_moves) == type(None):
-#                     continue
-#                 legal_moves = returnValidPos(all_moves,White_pList,Black_pList,None, piece,king_array,all_attack,True)
-#             if legal_moves.size > 0:
-#                 P_bool = True
-#                 break
-#         if not P_bool:
-#             return True 
-#     return False
+def draw_check(cBoard: Board, king_array: list[Piece])-> bool:
+    w_has_legal_moves = False
+    b_has_legal_moves = False
+    for side,P_bool in zip([cBoard.white_pList,cBoard.black_pList],[w_has_legal_moves,b_has_legal_moves]):
+        currentKing = king_array[0] if side[0].get_colour() == Colour.w.value else king_array[1]
+        isCheck = check(currentKing,None,cBoard)
+        if isCheck:
+            return False
+        for piece in side:
+            if piece.isDestroyed():
+                continue
+            legal_moves = 0
+            if piece.get_name() == "p":
+                all_moves,all_attack = movesReturn(piece)
+                if type(all_moves) == type(None):
+                    continue
+                legal_moves = returnValidPos(all_moves.reshape((all_moves.shape[1],all_moves.shape[0],2)),cBoard,None, piece,king_array,all_attack,True)
+            else:
+                all_moves,all_attack = movesReturn(piece)
+                if type(all_moves) == type(None):
+                    continue
+                legal_moves = returnValidPos(all_moves,cBoard,None, piece,king_array,all_attack,True)
+            if legal_moves.size > 0:
+                P_bool = True
+                break
+        if not P_bool:
+            return True 
+    return False
