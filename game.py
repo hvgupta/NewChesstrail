@@ -3,6 +3,8 @@ from board import *
 from Helper_func import *
 from click_handle import *
 
+BASE = 100
+
 class Game():
     def __init__(self, WhiteK:Piece, BlackK:Piece, turn: int, board: Board) -> None:
         self.WhiteK = WhiteK
@@ -33,13 +35,13 @@ class Game():
         id: 12
         moveType: 3
         multiple: 4
-        get id by //100, then iterate through the piece list to get id
-        then %100 to get moveType and multiple
+        get id by //BASE, then iterate through the piece list to get id
+        then %BASE to get moveType and multiple
             //10 to get moveType 
             %10 get multiple
         '''
-        id: int = actionNum//100
-        moveAndmultiple: int = actionNum%100
+        id: int = actionNum//BASE
+        moveAndmultiple: int = actionNum%BASE
         selected_piece: Piece = None
         for piece in self.board.black_pList + self.board.white_pList:
             if piece.id == id:
@@ -53,7 +55,6 @@ class Game():
                 moves: np.ndarray = np.concatenate((PieceType.K.value["moves"], PieceType.K.value["castle"]))
             else:
                 moves: np.ndarray = selected_piece.get_info()["moves"]
-            # moves : np.ndarray = np.concatenate((PieceType.p.value["moves"], PieceType.p.value["attack"])) if selected_piece.get_name() == "p" else selected_piece.get_info()["moves"]
             move = moves[moveAndmultiple%10].reshape((2))
         elif selected_piece.get_name() == "p":
             if moveAndmultiple%10 > 3:
@@ -69,13 +70,6 @@ class Game():
             move = moves[moveAndmultiple//10, moveAndmultiple%10].reshape((2))
             
         move = move*piece.get_colour() + selected_piece.get_position()
-        # newWhite_pList: list[Piece] = []
-        # newBlack_pList: list[Piece] = []
-        # for wPiece in self.white_pList:
-        #     newWhite_pList.append(wPiece.copy())
-        # for bPiece in self.black_pList:
-        #     newBlack_pList.append(bPiece.copy())
-        # newPiece = piece_at_that_pos(selected_piece.get_position(),newWhite_pList,newBlack_pList)
         newBoard = self.board.copy()
         newPiece = newBoard.piece_at_that_pos(selected_piece.get_position())
         second_click(newBoard,legalMoves,newPiece, tuple(move),[tuple(newPiece.get_position()), tuple(move)])
@@ -110,7 +104,7 @@ class Game():
     def get_validMoves(self)-> tuple:
         '''
         how to define action?
-        id * 100 {could be between 0:31}
+        id * BASE {could be between 0:31}
         moveType: {U: 0, UR: 1, R: 2, DR: 3, D: 4, DL: 5, L: 6, UL: 7}*10
         multiple {1:8}*1
         therefore a 4 digit number
@@ -120,7 +114,7 @@ class Game():
         values:list = []
         for index in range(len(self.allowedPiece)):
             piece = self.allowedPiece[index]
-            action = piece.id*100
+            action = piece.id*BASE
             mov:np.ndarray = (self.allowedActions[index] - piece.get_position())*piece.get_colour() # get the action type
             data:list
             basic_moves: np.ndarray

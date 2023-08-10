@@ -10,3 +10,4 @@ class SPG():
         self.memory: list[Game,int,int] = []
         self.root:Node = None
         self.node:Node = None
+        

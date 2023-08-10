@@ -1,4 +1,3 @@
-from AI import *
 from ResNet import *
 from MCTS import *
 from AlphaZero import *
@@ -17,7 +16,7 @@ model: ResNet = ResNet(5,1161, device)
 optimizer = torch.optim.Adam(model.parameters(), lr= 0.001)
 args = {
     'C': 2,
-    'num_searches': 600,
+    'num_searches': 50,
     'num_iterations': 8,
     'num_selfPlay_iterations': 500,
     'num_parallel_games': 500,

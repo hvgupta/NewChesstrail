@@ -1,5 +1,4 @@
 from __future__ import annotations
-import numpy as np
 import math
 from Helper_func import *
 from type_enum import *
@@ -44,14 +43,14 @@ class Node():
         return q_value + self.args['C'] * (math.sqrt(self.visit_count) / (child.visit_count + 1)) * child.prior
     
     def expand(self, policy):
-        for action, prob in enumerate(policy):
-            if prob > 0:
-                WKing, BKing, newBoard = self.game.move_piece(action)
-                child_colour = self.game.turn*-1
-                child = Node(Game(WKing, BKing,child_colour, newBoard),self.args, self, action,prob)
-                self.children.append(child)
-                
-        return child
+        arrayActionIndex:np.ndarray = np.nonzero(policy)[0]
+        for actionIndex in range(len(arrayActionIndex)):
+            action:int = arrayActionIndex[actionIndex]
+            prob = policy[action]
+            WKing, BKing, newBoard = self.game.move_piece(action)
+            child_colour = self.game.turn*-1
+            child = Node(Game(WKing, BKing,child_colour, newBoard),self.args, self, action,prob)
+            self.children.append(child)
             
     def backpropagate(self, value):
         self.value_sum += value

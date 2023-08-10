@@ -1,4 +1,3 @@
-import numpy as np
 from Piece import *
 import pygame as p
 from board import *
