@@ -115,7 +115,8 @@ class AlphaZeroParallel:
                 spg.memory.append((spg.root.game, action_probs, player))
 
                 temperature_action_probs = action_probs ** (1 / self.args['temperature'])
-                action = np.random.choice(3288, p=temperature_action_probs) # Divide temperature_action_probs with its sum in case of an error
+                temperature_action_probsNormalised = temperature_action_probs/sum(temperature_action_probs)
+                action = np.random.choice(3288, p=temperature_action_probsNormalised) # Divide temperature_action_probs with its sum in case of an error
 
                 WhiteK, BlackK, board = spg.game.move_piece(action)
                 spg.game = Game(WhiteK,BlackK, spg.game.turn*-1, board)

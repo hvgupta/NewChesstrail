@@ -2,6 +2,7 @@ import pygame as p
 from board import *
 from Helper_func import *
 from Piece import *
+from tkinter import Tk
 
 #continue return 0
 #else return 1
@@ -27,7 +28,10 @@ def FenInitialisation():
                     running = False
                     break
                 else:
-                    input_fen += e.unicode
+                    if e.key == p.K_v and e.mod & p.KMOD_CTRL:
+                        input_fen += Tk().clipboard_get()
+                    else:
+                        input_fen += e.unicode
         instruction_font = p.font.SysFont("monospace", 29)
         instruction_font.set_bold(5) 
         instruction1 = instruction_font.render("Enter a 'FEN' string", True, (255,255,255))

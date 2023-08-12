@@ -1,45 +1,72 @@
 from Piece import *
 
 EMPTY_POS = 0
+DEFAULTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 
 class Board(): 
     """ 
     defines the board according to the fen string inputted. An empty fen string would initalise the board in the deafult case
     """
-    def __init__(self, fen: str= ""):
+    def __init__(self, fen):
+        self.Turn: Colour
+        self.board: list[list[str]] = [[],[],[],[],[],[],[],[]]    
+        self.PieceonBoard: dict[str,Piece] = {} # indexes the pieces based on their position
+        self.white_pList: list[Piece] = [] # custering indexes the piece's id for white
+        self.black_pList: list[Piece] = [] # custering indexes the piece's id for white
+        remainingBlocks:list[str] = self.createBoard(fen if fen != "" else DEFAULTFEN)
         
-        self.board = [[],[],[],[],[],[],[],[]]
-        if fen == "":
-            self.board = [
-                ["bR","bN","bB","bQ","bK","bB","bN","bR"],
-                ["bp","bp","bp","bp","bp","bp","bp","bp"],
-                ["--","--","--","--","--","--","--","--"],
-                ["--","--","--","--","--","--","--","--"],
-                ["--","--","--","--","--","--","--","--"],
-                ["--","--","--","--","--","--","--","--"],
-                ["wp","wp","wp","wp","wp","wp","wp","wp"],
-                ["wR","wN","wB","wQ","wK","wB","wN","wR"]
-                ]
-            self.Turn = Colour.w
+        whiteKing:Piece = [piece for piece in self.white_pList if piece.get_name() == "K"][0]
+        blackKing:Piece = [piece for piece in self.black_pList if piece.get_name() == "K"][0]
+        for letter in remainingBlocks[0]:
+            if remainingBlocks[0] == "-":
+                break
+            king:Piece
+            if letter.upper():
+                king = whiteKing
+            else:
+                king = blackKing
 
-        else:
-            row = 0
-            index = 0
-            for letter in fen:
-                if letter.isnumeric():
-                    self.board[row].extend(["--"]*int(letter))
-                elif letter.isalpha():
-                    self.board[row].append("{colour}{piece}".format(piece = letter.lower() if letter in ["p","P"] else letter.upper(), colour = "b" if letter.islower() else "w"))
-                elif letter == "/":
-                    row+=1
-                else: break
-                index +=1
-            turn = fen[index+1]
-            self.Turn = Colour.w if turn == "w" else Colour.b
+            king.castle = True
+            if letter.lower() == "q":
+                self.piece_at_that_pos(king.get_position() + np.array([0,-4])).castle = True
+            else:
+                self.piece_at_that_pos(king.get_position()+np.array([0,3])).castle = True
+        
+        if remainingBlocks[1] != "-":
+            row:int = ord(remainingBlocks[1][0]) - ord("A")
+            col:int = ord(remainingBlocks[1][1]) - ord("1")
+            self.piece_at_that_pos(np.array([row,col])).K_from_en_passant = True
             
-        self.PieceonBoard: dict[str,Piece] = {}
-        self.white_pList: list[Piece] = []
-        self.black_pList: list[Piece] = []
+    def createBoard(self, fen:str):
+        fenParts:list[str] = fen.split()
+        row = 0
+        index = 0
+        col = 0
+        letter:str
+        for letter in fenParts[0]:
+            if letter.isnumeric():
+                self.board[row].extend(["--"]*int(letter))
+                col += int(letter)
+            elif letter.isalpha():
+                colour = "b" if letter.islower() else "w"
+                piece = letter.lower() if letter in ["p","P"] else letter.upper()
+                self.board[row].append(f"{colour}{piece}")
+                pieceAdded = Piece(getattr(PieceType,piece),np.array((row,col)),getattr(Colour,colour),index)
+                if colour == "b":
+                    self.black_pList.append(pieceAdded)
+                else:
+                    self.white_pList.append(pieceAdded)
+                self.PieceonBoard[str(pieceAdded.get_position().tolist())] = pieceAdded
+                index +=1
+                col +=1
+                
+            elif letter == "/":
+                row +=1
+                col = 0
+            else: break
+        self.Turn = Colour.w if fenParts[1] == "w" else Colour.b
+        
+        return fenParts[2:]
     
     def move_piece(self,piece: Piece,to: np.ndarray):
         if piece == "--":
@@ -53,30 +80,25 @@ class Board():
         del self.PieceonBoard[str(old_pos.tolist())]
         self.PieceonBoard[str(to.tolist())] = piece
     
-    # I thought a list of objects would be cool, so here it is 
-    def initialise(self): 
-        self.black_pList = []
-        self.white_pList = []
-        Id: int = 0
-        for row in range(8):
-            eachLin: list[Piece] = []
-            for col in range(8):
-                if self.board[row][col] == "--":
-                    eachLin.append(EMPTY_POS)
-                    continue
-                colour:Colour = getattr(Colour,self.board[row][col][0])
-                piece_type = getattr(PieceType,self.board[row][col][1])
-                Piece_created = Piece(piece_type,np.array((row,col)),colour,Id)
-                eachLin.append(Piece_created)
-                if colour.value == Colour.w.value:
-                    self.white_pList.append(Piece_created)
-                else:
-                    self.black_pList.append(Piece_created)
+    # def initialise(self): 
+    #     Id: int = 0
+    #     for row in range(8):
+    #         eachLin: list[Piece] = []
+    #         for col in range(8):
+    #             if self.board[row][col] == "--":
+    #                 eachLin.append(EMPTY_POS)
+    #                 continue
+    #             colour:Colour = getattr(Colour,self.board[row][col][0])
+    #             piece_type:PieceType = getattr(PieceType,self.board[row][col][1])
+    #             Piece_created:Piece = Piece(piece_type,np.array((row,col)),colour,Id)
+    #             eachLin.append(Piece_created)
+    #             if colour.value == Colour.w.value:
+    #                 self.white_pList.append(Piece_created)
+    #             else:
+    #                 self.black_pList.append(Piece_created)
                 
-                Id+=1
-                self.PieceonBoard[str([row,col])] = Piece_created
-                    
-        # return self.white_pList, self.black_pList, self.PieceonBoard
+    #             Id+=1
+    #             self.PieceonBoard[str([row,col])] = Piece_created
 
     def piece_at_that_pos(self, coord:np.ndarray) -> Piece:
         piece = EMPTY_POS

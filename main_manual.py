@@ -7,17 +7,17 @@ def main(fen = ""):
     
     #creating the chess board array
     ChessBoard = Board(fen)
-    ChessBoard.initialise()
     
     #inseting images on to the pygame window 
     loadImages()
     
     #declaring variables for later use
     running: bool = True
-    current_turn = Colour.w.value
+    current_turn = ChessBoard.Turn.value
     sqSelected = ()
     player_click:list[tuple[int]] = []
     legal_moves = []
+    enpassantTrack:dict[str,Piece] = {"-1":None,"1":None}
     whiteKing, blackKing = getKing(ChessBoard)
     selected_p = Piece
     w_checkMated = False
@@ -61,6 +61,10 @@ def main(fen = ""):
             break
                 
         if len(player_click) == 1: # check if the first click is valid, makes sure if a piece and the correct turn piece is choosen
+            if enpassantTrack[f"{current_turn}"] != None:
+                enpassantTrack[f"{current_turn}"].change_en_passant(False)
+                enpassantTrack[f"{current_turn}"] = None
+
             legal, selected_p, legal_moves = first_click(ChessBoard, current_turn, screen, whiteKing, blackKing, player_click) 
             if not legal: 
                 sqSelected,player_click = reset(sqSelected,player_click)
@@ -72,9 +76,10 @@ def main(fen = ""):
                 
                 gameState(screen,ChessBoard.board)
                 selected_p.change_castle()
+                if selected_p.get_name() == "p" and selected_p.can_be_en_passant():
+                    enpassantTrack[f"{current_turn}"] = selected_p
                 current_turn *= -1
                 pawn_promotion(selected_p,screen,ChessBoard.board)
-
                 sqSelected,player_click = reset(sqSelected,player_click)
             else:
                 sqSelected,player_click = reset(sqSelected,player_click)

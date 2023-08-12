@@ -287,7 +287,7 @@ def castle_checker(king: Piece, to: np.ndarray, cBoard:Board) -> bool:
         
     return False
 
-def check(wking: Piece, bking: Piece, cBoard: Board,attacking_p_return:bool=False):
+def check(wking: Piece, bking: Piece, cBoard: Board,attacking_p_return:bool=False): 
     for king in [wking,bking]:
         if king == None or king.isDestroyed(): # this is for error checking/ when one of the king is not specified
             continue
@@ -325,8 +325,9 @@ def check(wking: Piece, bking: Piece, cBoard: Board,attacking_p_return:bool=Fals
         
         for movs in K_horse_check:
             output = cBoard.piece_at_that_pos(movs)
-            if output != EMPTY_POS  and output.get_info() == PieceType.N.value and output.get_colour() != king.get_colour():
-                return king if not attacking_p_return else output
+            if output == EMPTY_POS or output.get_colour() == king.get_colour() or output.get_name() != "N":
+                continue
+            return king if not attacking_p_return else output
             
     return False
 

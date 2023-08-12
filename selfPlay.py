@@ -5,7 +5,6 @@ from AlphaZero import *
 c_board = Board()
 White_pList: list[Piece]
 Black_pList: list[Piece]
-c_board.initialise()
 running = True
 current_turn = Colour.w.value
 
