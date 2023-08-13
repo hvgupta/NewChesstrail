@@ -164,4 +164,3 @@ class Game():
         if check_mate(isChecked, self.board):
             return 100, True
         return 1, False
-            

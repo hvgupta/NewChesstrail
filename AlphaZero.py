@@ -90,7 +90,6 @@ class AlphaZeroParallel:
     def __init__(self, model, optimizer, game, args):
         self.model: ResNet = model
         self.optimizer = optimizer
-        self.game:Game = game
         self.args = args
         self.mcts = MCTSParallel(game, args, model)
         
@@ -121,7 +120,7 @@ class AlphaZeroParallel:
                 WhiteK, BlackK, board = spg.game.move_piece(action)
                 spg.game = Game(WhiteK,BlackK, spg.game.turn*-1, board)
 
-                value, is_terminal = self.game.valueAndterminated()
+                value, is_terminal = spg.game.valueAndterminated()
 
                 if is_terminal:
                     for hist_neutral_state, hist_action_probs, hist_player in spg.memory:
@@ -172,5 +171,5 @@ class AlphaZeroParallel:
             for epoch in range(self.args['num_epochs']):
                 self.train(memory)
             
-            torch.save(self.model.state_dict(), f"model_{iteration}_{self.game}.pt")
-            torch.save(self.optimizer.state_dict(), f"optimizer_{iteration}_{self.game}.pt")
+            torch.save(self.model.state_dict(), f"model_{iteration}_chessGame.pt")
+            torch.save(self.optimizer.state_dict(), f"optimizer_{iteration}_chessGame.pt")

@@ -67,4 +67,3 @@ class Node():
         
         for len8 in self.game.board.board:
             print(len8)
-            

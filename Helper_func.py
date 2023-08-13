@@ -333,9 +333,9 @@ def check(wking: Piece, bking: Piece, cBoard: Board,attacking_p_return:bool=Fals
 
 def check_mate(king:Piece,cBoard:Board) -> bool:
     old = king.get_position() # stores, king's old position
-    currently_check = check(king,None,cBoard) # is the king currently checked?
-    if king != currently_check:
+    if king != check(king,None,cBoard): # is the king currently checked?
         return False
+    
     new_pos = old + king.get_info()["moves"] # if not, then goes through all the moves that the king could make
     for pos in new_pos:
         if (np.max(pos[0]) > 7).all() or (np.min(pos[0]) < 0).all(): # removes position if they are out of board 
@@ -344,7 +344,7 @@ def check_mate(king:Piece,cBoard:Board) -> bool:
         # output can be None (move cannot be taken), True (move which does not result in check), False (move which results in check)
         if piece == EMPTY_POS or (piece != EMPTY_POS and piece.get_colour() != king.get_colour()):
             output = check_after_move(king,piece,king,pos, cBoard) 
-            if output: # if any move can result into avioding the check, then it is not checkmate 
+            if output: # if any move can result into avoiding the check, then it is not checkmate 
                 return False
    
     correct_self_list = cBoard.white_pList if Colour.w.value == king.get_colour() else cBoard.black_pList
@@ -359,11 +359,13 @@ def check_mate(king:Piece,cBoard:Board) -> bool:
         
     if attacking_line.any() == False: #if the attacking line does not exist then there is no check, (just as a precaution)
         return False
+    
+    piece:Piece
     for piece in correct_self_list:
-        try:
-            to,piece_movs = move_to_attack_line(piece,attacking_line,True) # sees if any piece can break the attack line
-        except:
-            continue
+        if piece.isDestroyed(): continue
+        if piece.get_name() == "K": continue
+        
+        to,piece_movs = move_to_attack_line(piece,attacking_line,True) # sees if any piece can break the attack line
         
         if to.size == 0: # if the piece cut the line, then continue
             continue
@@ -373,8 +375,6 @@ def check_mate(king:Piece,cBoard:Board) -> bool:
             output = cBoard.piece_at_that_pos(to)
             valid = check_after_move(piece,output, king, to, cBoard)
             if not lineClear or not valid:
-                break
-            if piece.get_name() == "K":
                 break
             return False
     

@@ -7,7 +7,7 @@ class Board():
     """ 
     defines the board according to the fen string inputted. An empty fen string would initalise the board in the deafult case
     """
-    def __init__(self, fen):
+    def __init__(self, fen=""):
         self.Turn: Colour
         self.board: list[list[str]] = [[],[],[],[],[],[],[],[]]    
         self.PieceonBoard: dict[str,Piece] = {} # indexes the pieces based on their position
@@ -79,26 +79,6 @@ class Board():
         self.board[old_pos[0]][old_pos[1]] = "--"
         del self.PieceonBoard[str(old_pos.tolist())]
         self.PieceonBoard[str(to.tolist())] = piece
-    
-    # def initialise(self): 
-    #     Id: int = 0
-    #     for row in range(8):
-    #         eachLin: list[Piece] = []
-    #         for col in range(8):
-    #             if self.board[row][col] == "--":
-    #                 eachLin.append(EMPTY_POS)
-    #                 continue
-    #             colour:Colour = getattr(Colour,self.board[row][col][0])
-    #             piece_type:PieceType = getattr(PieceType,self.board[row][col][1])
-    #             Piece_created:Piece = Piece(piece_type,np.array((row,col)),colour,Id)
-    #             eachLin.append(Piece_created)
-    #             if colour.value == Colour.w.value:
-    #                 self.white_pList.append(Piece_created)
-    #             else:
-    #                 self.black_pList.append(Piece_created)
-                
-    #             Id+=1
-    #             self.PieceonBoard[str([row,col])] = Piece_created
 
     def piece_at_that_pos(self, coord:np.ndarray) -> Piece:
         piece = EMPTY_POS
