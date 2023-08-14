@@ -300,7 +300,7 @@ def check(wking: Piece, bking: Piece, cBoard: Board,attacking_p_return:bool=Fals
             for each in mov_num: # iterates through the positions to check
                 output = cBoard.piece_at_that_pos(each)
                 
-                if output == EMPTY_POS:
+                if output == EMPTY_POS or output.isDestroyed():
                     continue
                 
                 elif output.get_colour() == king.get_colour(): # when output is not empty position and output is of the same colour
@@ -373,7 +373,7 @@ def check_mate(king:Piece,cBoard:Board) -> bool:
         for movs in to:
             lineClear = isLineAvailable(piece,piece_movs,movs,cBoard)
             output = cBoard.piece_at_that_pos(to)
-            valid = check_after_move(piece,output, king, to, cBoard)
+            valid = check_after_move(piece,output, king, movs, cBoard)
             if not lineClear or not valid:
                 break
             return False
@@ -462,7 +462,8 @@ def move_to_attack_line(piece: Piece, attack_movs: np.ndarray, p_pos_return: boo
     
     elif piece.get_name() == "p":
         all_attack = np.expand_dims(all_attack,axis=1)
-        t_table = ((all_attack-attack_movs[-1]) == 0).all(axis=2).reshape(1,2,1)
+        t_table:np.ndarray = ((all_attack-attack_movs[-1]) == 0).all(axis=2)
+        t_table = t_table.reshape((t_table.shape[0]))
         to = all_attack[t_table[0]]
         t_table = ((p_movs-attack_movs[:-1]) == 0).all(axis=3)
         to_extended = p_movs[t_table.any(axis=0)]
