@@ -71,23 +71,17 @@ class MCTSParallel():
         """
         for spGame in spGames:
             state = spGame.game.get_encodedState()
-            policy, _ = self.model(torch.tensor(state,device= self.model.device))
-            policy = torch.softmax(policy).cpu().numpy()
-        # states = np.stack([spGame.game.get_encodedState() for spGame in spGames])
-        # policy, _ = self.model(
-        #     torch.tensor(states, device=self.model.device)
-        # )
-        # policy:np.ndarray = torch.softmax(policy, axis=1).cpu().numpy()
+            policy, _ = self.model(torch.tensor(state,device= self.model.device).unsqueeze(0))
+            policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
             policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
-                * np.random.dirichlet([self.args['dirichlet_alpha']] * 3288, size=policy.shape[0])
+                * np.random.dirichlet([self.args['dirichlet_alpha']] * 3288)
                 
-            spg_policy = policy
             valid_moves,_ = spGame.game.get_validMoves()
-            spg_policy *= valid_moves
-            spg_policy /= np.sum(spg_policy)
+            policy *= valid_moves
+            policy /= np.sum(policy)
 
             spGame.root = Node(self.game, self.args, visit_count=1)
-            spGame.root.expand(spg_policy)
+            spGame.root.expand(policy)
        
         for search in range(self.args['num_searches']):
             expandable_spGames:list[int] = []
@@ -109,8 +103,8 @@ class MCTSParallel():
                 else:
                     spg.node = node
                     expandable_spGames.append(index)
-                    policy,value = self.model(torch.tensor(node.game.get_encodedState(), device=self.model.device))
-                    policy = torch.softmax(policy, axis=1).cpu().numpy()
+                    policy,value = self.model(torch.tensor(node.game.get_encodedState(), device=self.model.device).unsqueeze(0))
+                    policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
                     value = value.cpu().numpy()
                     policiesValues.append((policy,value))
                     
